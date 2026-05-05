@@ -182,8 +182,23 @@ function AccountTab({ user, showToast }) {
 }
 
 function PrivacyTab({ showToast, signOut, navigate }) {
+  const { profile, fetchProfile } = useAuthStore()
   const [pw, setPw] = useState('')
   const [loading, setLoading] = useState(false)
+  const [anonSaving, setAnonSaving] = useState(false)
+  const anonymous = Boolean(profile?.anonymousViews)
+
+  const toggleAnonymous = async (next) => {
+    setAnonSaving(true)
+    try {
+      await profileApi.updateMe({ anonymousViews: next })
+      await fetchProfile()
+      showToast(next ? 'You will now appear as anonymous when viewing profiles' : 'Your visits will be visible to other users')
+    } catch (err) {
+      showToast(err.message || 'Failed', 'error')
+    }
+    setAnonSaving(false)
+  }
 
   const del = async () => {
     if (!window.confirm('This will permanently delete your account and all content. Continue?')) return
@@ -201,19 +216,38 @@ function PrivacyTab({ showToast, signOut, navigate }) {
   }
 
   return (
-    <Card title="Delete account" hint="This removes your profile, posts, messages, connections and subscription. There is no undo." danger>
-      <Field label="Current password">
-        <input type="password" value={pw} onChange={(e) => setPw(e.target.value)}
-          className="w-full h-10 bg-bg border border-red-200 rounded-lg px-3 text-sm outline-none focus:border-red-500" />
-      </Field>
-      <button
-        onClick={del}
-        disabled={!pw || loading}
-        className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-[12.5px] font-bold rounded-full transition disabled:opacity-50">
-        <Trash2 className="w-3.5 h-3.5" strokeWidth={2.5} />
-        {loading ? 'Deleting…' : 'Delete my account'}
-      </button>
-    </Card>
+    <div className="space-y-4">
+      <Card title="Anonymous mode for profile views" hint="When on, other users see 'Anonymous viewer' instead of your name when you visit their profile.">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-[13px] font-bold">Browse anonymously</div>
+            <div className="text-[11.5px] text-gray-400 mt-0.5">{anonymous ? 'You are currently anonymous' : 'Your name appears on profiles you visit'}</div>
+          </div>
+          <button
+            onClick={() => toggleAnonymous(!anonymous)}
+            disabled={anonSaving}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition disabled:opacity-50
+              ${anonymous ? 'bg-accent' : 'bg-gray-300'}`}
+            aria-pressed={anonymous}>
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${anonymous ? 'translate-x-6' : 'translate-x-1'}`} />
+          </button>
+        </div>
+      </Card>
+
+      <Card title="Delete account" hint="This removes your profile, posts, messages, connections and subscription. There is no undo." danger>
+        <Field label="Current password">
+          <input type="password" value={pw} onChange={(e) => setPw(e.target.value)}
+            className="w-full h-10 bg-bg border border-red-200 rounded-lg px-3 text-sm outline-none focus:border-red-500" />
+        </Field>
+        <button
+          onClick={del}
+          disabled={!pw || loading}
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-[12.5px] font-bold rounded-full transition disabled:opacity-50">
+          <Trash2 className="w-3.5 h-3.5" strokeWidth={2.5} />
+          {loading ? 'Deleting…' : 'Delete my account'}
+        </button>
+      </Card>
+    </div>
   )
 }
 

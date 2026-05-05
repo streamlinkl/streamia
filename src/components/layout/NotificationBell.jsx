@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Bell, BadgeCheck, Heart, MessageSquare, Handshake, UserPlus } from 'lucide-react'
+import { Bell, BadgeCheck, Eye, Heart, MessageSquare, Handshake, UserPlus } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { notificationApi } from '@/lib/api'
 import { getSocket } from '@/lib/socket'
@@ -11,6 +11,7 @@ const TYPE_META = {
   follow:              { Icon: UserPlus,    color: 'text-blue-500',    text: 'followed you' },
   message:             { Icon: MessageSquare, color: 'text-gray-700',  text: 'sent you a message' },
   post_like:           { Icon: Heart,       color: 'text-rose-500',    text: 'liked your post' },
+  profile_view:        { Icon: Eye,         color: 'text-indigo-500',  text: 'viewed your profile' },
   admin:               { Icon: BadgeCheck,  color: 'text-amber-500',   text: '' },
 }
 

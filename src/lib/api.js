@@ -135,6 +135,12 @@ export const profileApi = {
   search: (q, limit) => api.get('/api/profiles/search', { query: { q, limit } }),
   suggestions: (limit) => api.get('/api/profiles/suggestions', { query: { limit } }),
   connections: (id, limit) => api.get(`/api/profiles/${id}/connections`, { query: { limit } }),
+  recordView: (id) => api.post(`/api/profiles/${id}/view`),
+}
+
+export const profileViewApi = {
+  summary: () => api.get('/api/profile-views/me/summary'),
+  list: (limit) => api.get('/api/profile-views/me', { query: { limit } }),
 }
 
 export const postApi = {

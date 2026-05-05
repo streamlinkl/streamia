@@ -28,6 +28,7 @@ const AdminPage = lazy(() => import('@/pages/AdminPage'))
 const NotificationsPage = lazy(() => import('@/pages/NotificationsPage'))
 const SettingsPage = lazy(() => import('@/pages/SettingsPage'))
 const ManageJobsPage = lazy(() => import('@/pages/ManageJobsPage'))
+const ProfileViewsPage = lazy(() => import('@/pages/ProfileViewsPage'))
 
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -86,6 +87,7 @@ export default function App() {
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/settings"      element={<SettingsPage />} />
             <Route path="/jobs/manage"   element={<ManageJobsPage />} />
+            <Route path="/profile-views" element={<ProfileViewsPage />} />
             <Route path="/pricing"      element={<PricingPage />} />
             <Route path="/app"          element={<Navigate to="/feed" replace />} />
           </Route>

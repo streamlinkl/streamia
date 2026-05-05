@@ -1,5 +1,5 @@
 {
-  "brand": { "name": "Stream Link", "tagline": "The professional home for streamers." },
+  "brand": { "name": "StreamLink", "tagline": "The professional home for streamers." },
   "nav": {
     "home": "Home",
     "network": "Network",
@@ -62,7 +62,7 @@
     },
     "cta": {
       "heading": "Ready to grow your streaming career?",
-      "subtitle": "Join thousands of streamers already on Stream Link. Free forever.",
+      "subtitle": "Join thousands of streamers already on StreamLink. Free forever.",
       "primary": "Create your free profile",
       "secondary": "Sign in"
     },

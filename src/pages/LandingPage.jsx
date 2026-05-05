@@ -330,7 +330,7 @@ export default function LandingPage() {
             <Link to="/register/company" className="hover:text-gray-900 transition">{t('landing.brandsBand.badge')}</Link>
           </div>
           <div className="md:ml-auto text-[11.5px] text-gray-400">
-            © {new Date().getFullYear()} Stream Link · {t('landing.footer.tagline')}
+            © {new Date().getFullYear()} StreamLink · {t('landing.footer.tagline')}
           </div>
         </div>
       </footer>

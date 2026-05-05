@@ -34,10 +34,10 @@ const PLANS = [
     stripePriceMonthly: 'price_pro_monthly', // replace with real Stripe price ID
     stripePriceYearly: 'price_pro_yearly',
     features: [
+      'See who viewed your profile',
+      'Unlimited messaging (no daily limit)',
       'Unlimited job listings',
       'Featured placement in search',
-      'Direct message creators',
-      'Unlimited applications',
       'Company analytics dashboard',
       'Verified badge',
     ],

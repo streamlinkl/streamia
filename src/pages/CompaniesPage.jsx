@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Loader2, Star } from 'lucide-react'
+import { BadgeCheck, Building2, Check, ExternalLink, Loader2, Plus, Search, Star, Users, X } from 'lucide-react'
 import { companyApi, reviewApi } from '@/lib/api'
 import { useAppStore } from '@/lib/store'
 import StarRating from '@/components/ui/StarRating'
+import ImageUpload from '@/components/ui/ImageUpload'
 import { formatDistanceToNow } from 'date-fns'
 
 const FILTERS = ['All', 'Sponsors', 'Esports', 'Agencies', 'Hardware', 'Streaming']
@@ -21,7 +22,7 @@ export default function CompaniesPage() {
   const [submittingReview, setSubmittingReview] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
   const [followed, setFollowed] = useState(new Set())
-  const [createForm, setCreateForm] = useState({ name: '', industry: '', website: '', description: '', looking_for: [] })
+  const [createForm, setCreateForm] = useState({ name: '', industry: '', website: '', description: '', location: '', logoUrl: '', looking_for: [] })
   const [creating, setCreating] = useState(false)
   const [searchQ, setSearchQ] = useState('')
 
@@ -40,7 +41,7 @@ export default function CompaniesPage() {
     setFollowed(s => {
       const next = new Set(s)
       if (next.has(id)) { next.delete(id); showToast(`Unfollowed ${name}`) }
-      else { next.add(id); showToast(`✅ Following ${name}!`) }
+      else { next.add(id); showToast(`Following ${name}`) }
       return next
     })
   }
@@ -54,11 +55,13 @@ export default function CompaniesPage() {
         industry: createForm.industry,
         website: createForm.website || null,
         description: createForm.description || null,
+        location: createForm.location || null,
+        logoUrl: createForm.logoUrl || null,
         lookingFor: createForm.looking_for,
       })
-      showToast('🎉 Company page created!')
+      showToast('Company page created')
       setShowCreate(false)
-      setCreateForm({ name: '', industry: '', website: '', description: '', looking_for: [] })
+      setCreateForm({ name: '', industry: '', website: '', description: '', location: '', logoUrl: '', looking_for: [] })
       fetchCompanies()
     } catch (err) {
       if (err.code === 'SLUG_TAKEN') showToast('A company with that name exists', 'error')
@@ -117,42 +120,67 @@ export default function CompaniesPage() {
         <div className="space-y-4">
           {/* Header bar */}
           <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex items-center gap-3">
-            <input type="text" placeholder="🔍 Search companies…"
-              className="flex-1 h-9 bg-bg border border-gray-200 rounded-full px-4 text-[13px] outline-none focus:border-accent"
-              value={searchQ} onChange={e => setSearchQ(e.target.value)} />
+            <div className="flex-1 relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" strokeWidth={2.5} />
+              <input type="text" placeholder="Search companies…"
+                className="w-full h-9 bg-bg border border-gray-200 rounded-full pl-9 pr-4 text-[13px] outline-none focus:border-accent"
+                value={searchQ} onChange={e => setSearchQ(e.target.value)} />
+            </div>
             <div className="flex gap-1.5 flex-wrap">
               {FILTERS.map(f => (
                 <button key={f} onClick={() => setFilter(f)}
                   className={`px-3 py-1.5 rounded-full text-[11.5px] font-bold transition ${filter === f ? 'bg-accent text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>{f}</button>
               ))}
             </div>
-            <button onClick={() => setShowCreate(true)} className="flex-shrink-0 px-4 py-2 bg-accent hover:bg-accent-dk text-white font-bold text-[12.5px] rounded-full transition whitespace-nowrap">+ Create Page</button>
+            <button onClick={() => setShowCreate(true)} className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 bg-accent hover:bg-accent-dk text-white font-bold text-[12.5px] rounded-full transition whitespace-nowrap">
+              <Plus className="w-3.5 h-3.5" strokeWidth={3} /> Create Page
+            </button>
           </div>
 
           {/* Selected company detail */}
           {selected && (
             <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-              <div className="h-28 bg-gradient-to-r from-accent to-purple-400 flex items-end px-6 pb-4">
-                <div className="text-5xl">{selected.logoUrl ? <img src={selected.logoUrl} alt="" className="w-12 h-12 rounded" /> : '🏢'}</div>
+              <div className="relative h-32 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-600">
+                {selected.bannerUrl && (
+                  <img src={selected.bannerUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                )}
               </div>
-              <div className="px-6 pt-4 pb-2 border-b border-gray-100">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-[18px] font-extrabold">{selected.name}</h2>
-                      {selected.isVerified && <span className="text-[10.5px] bg-blue-50 text-blue-600 font-extrabold px-2 py-0.5 rounded-full">✓ Verified</span>}
-                    </div>
-                    <div className="text-[12.5px] text-gray-400 mt-0.5">{selected.industry}{selected.location ? ` · ${selected.location}` : ''}</div>
-                    <div className="flex gap-3 mt-2 text-[12px] text-gray-500">
-                      <span>👥 {(selected.followersCount || 0).toLocaleString()} followers</span>
-                      {selected.website && <a href={selected.website} target="_blank" rel="noreferrer" className="text-accent hover:underline">🔗 Website</a>}
-                    </div>
+              <div className="px-6 pb-2 border-b border-gray-100">
+                <div className="flex items-end justify-between -mt-10 mb-3">
+                  <div className="w-20 h-20 rounded-2xl bg-white border-4 border-white shadow-md flex items-center justify-center overflow-hidden">
+                    {selected.logoUrl
+                      ? <img src={selected.logoUrl} alt="" className="w-full h-full object-cover" />
+                      : <Building2 className="w-9 h-9 text-gray-400" strokeWidth={1.75} />}
                   </div>
                   <button onClick={() => toggleFollow(selected.id, selected.name)}
-                    className={`px-5 py-2 rounded-full font-bold text-[13px] transition
+                    className={`px-5 py-2 rounded-full font-bold text-[13px] inline-flex items-center gap-1.5 transition
                       ${followed.has(selected.id) ? 'bg-gray-100 text-gray-500 hover:bg-gray-200' : 'border-2 border-accent text-accent hover:bg-accent hover:text-white'}`}>
-                    {followed.has(selected.id) ? '✓ Following' : '+ Follow'}
+                    {followed.has(selected.id)
+                      ? <><Check className="w-3.5 h-3.5" strokeWidth={3} /> Following</>
+                      : <><Plus className="w-3.5 h-3.5" strokeWidth={3} /> Follow</>}
                   </button>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-[18px] font-extrabold">{selected.name}</h2>
+                    {selected.isVerified && (
+                      <span className="inline-flex items-center gap-1 text-[10.5px] bg-blue-50 text-blue-600 font-extrabold px-2 py-0.5 rounded-full">
+                        <BadgeCheck className="w-3 h-3" fill="currentColor" strokeWidth={0} /> Verified
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[12.5px] text-gray-400 mt-0.5">{selected.industry}{selected.location ? ` · ${selected.location}` : ''}</div>
+                  <div className="flex items-center gap-3 mt-2 text-[12px] text-gray-500">
+                    <span className="inline-flex items-center gap-1">
+                      <Users className="w-3.5 h-3.5" strokeWidth={2.5} />
+                      {(selected.followersCount || 0).toLocaleString()} followers
+                    </span>
+                    {selected.website && (
+                      <a href={selected.website} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-accent hover:underline">
+                        <ExternalLink className="w-3.5 h-3.5" strokeWidth={2.5} /> Website
+                      </a>
+                    )}
+                  </div>
                 </div>
                 <div className="flex gap-px mt-3">
                   {['Overview','Open Deals','Reviews','Updates'].map(t => (
@@ -266,27 +294,39 @@ export default function CompaniesPage() {
           <div className="grid grid-cols-2 gap-3">
             {filtered.length === 0 && (
               <div className="col-span-2 bg-white border border-gray-200 rounded-xl p-10 text-center">
-                <div className="text-3xl mb-2">🏢</div>
+                <Building2 className="w-8 h-8 text-gray-300 mx-auto mb-2" strokeWidth={1.75} />
                 <div className="font-bold text-gray-600">No company pages yet</div>
-                <div className="text-sm text-gray-400 mt-1">Be the first to create one!</div>
+                <div className="text-sm text-gray-400 mt-1">Be the first to create one.</div>
               </div>
             )}
             {filtered.map(c => (
               <div key={c.id} onClick={() => { setSelected(c); setCompanyTab('Overview') }}
                 className={`bg-white border rounded-xl p-4 cursor-pointer hover:shadow-md transition ${selected?.id === c.id ? 'border-accent' : 'border-gray-200'}`}>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="text-2xl">{c.logoUrl ? <img src={c.logoUrl} alt="" className="w-7 h-7 rounded" /> : '🏢'}</div>
+                  <div className="w-9 h-9 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    {c.logoUrl
+                      ? <img src={c.logoUrl} alt="" className="w-full h-full object-cover" />
+                      : <Building2 className="w-4 h-4 text-gray-400" strokeWidth={2} />}
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-bold flex items-center gap-1">{c.name} {c.isVerified && <span className="text-blue-500 text-[11px]">✓</span>}</div>
-                    <div className="text-[11px] text-gray-400">{c.industry || '—'}</div>
+                    <div className="text-[13px] font-bold flex items-center gap-1">
+                      <span className="truncate">{c.name}</span>
+                      {c.isVerified && <BadgeCheck className="w-3.5 h-3.5 text-sky-500 flex-shrink-0" fill="currentColor" strokeWidth={0} />}
+                    </div>
+                    <div className="text-[11px] text-gray-400 truncate">{c.industry || '—'}</div>
                   </div>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[11.5px] text-gray-400">👥 {(c.followersCount || 0).toLocaleString()}</span>
+                  <span className="inline-flex items-center gap-1 text-[11.5px] text-gray-400">
+                    <Users className="w-3 h-3" strokeWidth={2.5} />
+                    {(c.followersCount || 0).toLocaleString()}
+                  </span>
                   <button onClick={e => { e.stopPropagation(); toggleFollow(c.id, c.name) }}
-                    className={`text-[11.5px] font-bold px-3 py-1 rounded-full border transition
+                    className={`inline-flex items-center gap-1 text-[11.5px] font-bold px-3 py-1 rounded-full border transition
                       ${followed.has(c.id) ? 'border-gray-200 text-gray-400' : 'border-accent text-accent hover:bg-accent hover:text-white'}`}>
-                    {followed.has(c.id) ? '✓ Following' : '+ Follow'}
+                    {followed.has(c.id)
+                      ? <><Check className="w-3 h-3" strokeWidth={3} /> Following</>
+                      : <><Plus className="w-3 h-3" strokeWidth={3} /> Follow</>}
                   </button>
                 </div>
               </div>
@@ -300,7 +340,7 @@ export default function CompaniesPage() {
             <div className="font-extrabold text-[13.5px] mb-3">Why create a page?</div>
             {['Find creators that match your brand', 'Post deals and open roles', 'Build your creator community', 'Track applications in one place'].map((t, i) => (
               <div key={i} className="flex items-start gap-2 mb-2">
-                <span className="text-accent font-bold text-sm mt-0.5">✓</span>
+                <Check className="w-3.5 h-3.5 text-accent mt-0.5 flex-shrink-0" strokeWidth={3} />
                 <span className="text-[12.5px] text-gray-600">{t}</span>
               </div>
             ))}
@@ -317,10 +357,14 @@ export default function CompaniesPage() {
                 if (!c) return null
                 return (
                   <div key={id} className="flex items-center gap-2 py-2 border-b border-gray-50 last:border-0">
-                    <span>🏢</span>
-                    <div className="flex-1">
-                      <div className="text-[12.5px] font-semibold">{c.name}</div>
-                      <div className="text-[10.5px] text-gray-400">{c.industry || '—'}</div>
+                    <div className="w-6 h-6 rounded-md bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {c.logoUrl
+                        ? <img src={c.logoUrl} alt="" className="w-full h-full object-cover" />
+                        : <Building2 className="w-3 h-3 text-gray-400" strokeWidth={2} />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[12.5px] font-semibold truncate">{c.name}</div>
+                      <div className="text-[10.5px] text-gray-400 truncate">{c.industry || '—'}</div>
                     </div>
                   </div>
                 )
@@ -336,11 +380,22 @@ export default function CompaniesPage() {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-1">
               <h3 className="text-[17px] font-extrabold">Create Company Page</h3>
-              <button onClick={() => setShowCreate(false)} className="text-gray-400 text-xl hover:text-gray-700">✕</button>
+              <button onClick={() => setShowCreate(false)} aria-label="Close" className="text-gray-400 hover:text-gray-700 transition">
+                <X className="w-5 h-5" strokeWidth={2.5} />
+              </button>
             </div>
             <p className="text-[12.5px] text-gray-400 mb-5">Free — connect with thousands of streamers</p>
 
             <div className="space-y-4">
+              <div>
+                <label className="block text-[12px] font-bold text-gray-500 mb-1.5">Logo</label>
+                <ImageUpload
+                  kind="company-logo"
+                  value={createForm.logoUrl}
+                  onChange={(url) => setCreateForm({ ...createForm, logoUrl: url })}
+                  label="Upload logo"
+                />
+              </div>
               <div>
                 <label className="block text-[12px] font-bold text-gray-500 mb-1.5">Company Name *</label>
                 <input type="text" placeholder="e.g. RedBull Gaming"
@@ -355,11 +410,19 @@ export default function CompaniesPage() {
                   {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
                 </select>
               </div>
-              <div>
-                <label className="block text-[12px] font-bold text-gray-500 mb-1.5">Website</label>
-                <input type="url" placeholder="https://yourcompany.com"
-                  className="w-full h-10 bg-bg border border-gray-200 rounded-xl px-3 text-[13px] outline-none focus:border-accent"
-                  value={createForm.website} onChange={e => setCreateForm({ ...createForm, website: e.target.value })} />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[12px] font-bold text-gray-500 mb-1.5">Website</label>
+                  <input type="url" placeholder="https://yourcompany.com"
+                    className="w-full h-10 bg-bg border border-gray-200 rounded-xl px-3 text-[13px] outline-none focus:border-accent"
+                    value={createForm.website} onChange={e => setCreateForm({ ...createForm, website: e.target.value })} />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-bold text-gray-500 mb-1.5">Location</label>
+                  <input type="text" placeholder="Istanbul, TR"
+                    className="w-full h-10 bg-bg border border-gray-200 rounded-xl px-3 text-[13px] outline-none focus:border-accent"
+                    value={createForm.location} onChange={e => setCreateForm({ ...createForm, location: e.target.value })} />
+                </div>
               </div>
               <div>
                 <label className="block text-[12px] font-bold text-gray-500 mb-1.5">Description</label>
@@ -381,14 +444,15 @@ export default function CompaniesPage() {
               </div>
             </div>
 
-            <div className="mt-5 p-3 bg-green-50 border border-green-200 rounded-xl text-[12px] text-green-700 font-semibold">
-              ✅ Free tier — unlimited creator connections
+            <div className="mt-5 inline-flex items-center gap-1.5 w-full px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-xl text-[12px] text-emerald-700 font-semibold">
+              <Check className="w-3.5 h-3.5" strokeWidth={3} />
+              Free tier — your first 2 creator messages per day are free.
             </div>
 
             <div className="flex gap-3 mt-4">
               <button onClick={handleCreate} disabled={!createForm.name.trim() || !createForm.industry || creating}
-                className="flex-1 h-11 bg-accent hover:bg-accent-dk text-white font-bold rounded-full disabled:opacity-50 transition">
-                {creating ? 'Creating…' : 'Create Page →'}
+                className="flex-1 h-11 inline-flex items-center justify-center gap-2 bg-accent hover:bg-accent-dk text-white font-bold rounded-full disabled:opacity-50 transition">
+                {creating ? <><Loader2 className="w-4 h-4 animate-spin" strokeWidth={2.5} /> Creating…</> : 'Create Page'}
               </button>
               <button onClick={() => setShowCreate(false)} className="px-5 border border-gray-200 rounded-full text-[13px] font-semibold text-gray-500 hover:border-gray-400 transition">Cancel</button>
             </div>

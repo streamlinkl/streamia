@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { BadgeCheck, X } from 'lucide-react'
+import {
+  BadgeCheck, BarChart3, Check, Clock, Eye, FileText, Handshake, Heart, MapPin,
+  MessageCircle, Pencil, Plus, Radio, Rocket, TrendingUp, Users, X,
+} from 'lucide-react'
 import { connectionApi, followApi, postApi, profileApi } from '@/lib/api'
 import { useAuthStore, useAppStore } from '@/lib/store'
 import { formatDistanceToNow } from 'date-fns'
@@ -9,15 +12,15 @@ import PlatformPicker from '@/components/ui/PlatformPicker'
 import { COUNTRIES, LANGUAGES } from '@/lib/countries'
 
 const TABS = ['Posts', 'Schedule', 'Stats']
-const gradients = ['from-accent to-purple-400','from-pink-500 to-rose-500','from-yellow-400 to-amber-500','from-green-500 to-emerald-600','from-cyan-500 to-blue-500']
 
 const SCHEDULE = [
-  { day: 'Monday',    time: '8:00 PM', game: 'Valorant Ranked',      duration: '4h', platform: '🟣' },
-  { day: 'Wednesday', time: '7:00 PM', game: 'Just Chatting + Games', duration: '3h', platform: '🟣' },
-  { day: 'Friday',    time: '9:00 PM', game: 'New Release Friday',    duration: '5h', platform: '🟢' },
-  { day: 'Saturday',  time: '3:00 PM', game: 'Subscriber Stream',     duration: '6h', platform: '🟣' },
-  { day: 'Sunday',    time: '5:00 PM', game: 'Chill Variety Stream',  duration: '4h', platform: '🔴' },
+  { day: 'Monday',    time: '8:00 PM', game: 'Valorant Ranked',      duration: '4h', platform: 'twitch' },
+  { day: 'Wednesday', time: '7:00 PM', game: 'Just Chatting + Games', duration: '3h', platform: 'twitch' },
+  { day: 'Friday',    time: '9:00 PM', game: 'New Release Friday',    duration: '5h', platform: 'kick' },
+  { day: 'Saturday',  time: '3:00 PM', game: 'Subscriber Stream',     duration: '6h', platform: 'twitch' },
+  { day: 'Sunday',    time: '5:00 PM', game: 'Chill Variety Stream',  duration: '4h', platform: 'youtube' },
 ]
+const PLATFORM_DOT = { twitch: 'bg-purple-500', kick: 'bg-green-500', youtube: 'bg-red-500' }
 
 export default function ProfilePage() {
   const { id } = useParams()
@@ -71,6 +74,11 @@ export default function ProfilePage() {
         const postsResult = await postApi.byUser(targetId, undefined, 50)
         if (cancelled) return
         setPosts(postsResult.items || [])
+
+        // Track this as a profile view (idempotent per day server-side).
+        if (!isOwnProfile) {
+          profileApi.recordView(targetId).catch(() => {})
+        }
       } catch (err) {
         if (!cancelled) showToast(err.message || 'Could not load profile', 'error')
       } finally {
@@ -89,7 +97,7 @@ export default function ProfilePage() {
         Object.entries(editForm).map(([k, v]) => [k, v === '' ? null : v])
       )
       const updated = await profileApi.updateMe(patch)
-      showToast('✅ Profile updated!')
+      showToast('Profile updated')
       setShowEdit(false)
       await fetchProfile()
       setProfile(updated)
@@ -109,7 +117,7 @@ export default function ProfilePage() {
         setIsFollowing(false); showToast('Unfollowed')
       } else {
         await followApi.follow(profile.id)
-        setIsFollowing(true); showToast(`✅ Following ${profile.displayName}!`)
+        setIsFollowing(true); showToast(`Following ${profile.displayName}`)
       }
     } catch (err) {
       showToast(err.message || 'Action failed', 'error')
@@ -131,7 +139,7 @@ export default function ProfilePage() {
     if (!myProfile || isConnected) return
     try {
       await connectionApi.create(profile.id)
-      setIsConnected(true); showToast('✅ Connection request sent!')
+      setIsConnected(true); showToast('Connection request sent')
     } catch (err) {
       if (err.code === 'CONNECTION_EXISTS') showToast('Already connected or pending', 'error')
       else showToast(err.message || 'Could not send request', 'error')
@@ -151,32 +159,61 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-[900px] mx-auto px-4 py-5">
+      {isOwnProfile && (
+        <Link
+          to="/profile-views"
+          className="flex items-center gap-3 bg-white border border-gray-200 rounded-2xl shadow-sm px-4 py-3 mb-4 hover:border-accent transition group">
+          <div className="w-9 h-9 bg-accent-lt rounded-full flex items-center justify-center flex-shrink-0">
+            <Eye className="w-4 h-4 text-accent" strokeWidth={2.25} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[13px] font-extrabold">Who viewed your profile</div>
+            <div className="text-[11.5px] text-gray-400">See your viewers from the last 90 days · upgrade to unlock identities</div>
+          </div>
+          <span className="text-[11px] font-bold text-accent group-hover:translate-x-0.5 transition">View →</span>
+        </Link>
+      )}
+
       {/* Profile card */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-4">
-        <div className="h-40 bg-gradient-to-r from-purple-100 via-blue-100 to-indigo-100" />
+        <div className="relative h-44 bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200">
+          {profile.bannerUrl && (
+            <img src={profile.bannerUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          )}
+        </div>
         <div className="px-6 pb-5">
           <div className="flex items-end justify-between -mt-10 mb-4">
             <div className="relative">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-accent to-purple-400 border-4 border-white flex items-center justify-center text-white font-extrabold text-2xl shadow-md">
-                {initials}
+              <div className="w-20 h-20 rounded-full border-4 border-white shadow-md overflow-hidden bg-gradient-to-br from-accent to-purple-400 flex items-center justify-center text-white font-extrabold text-2xl">
+                {profile.avatarUrl
+                  ? <img src={profile.avatarUrl} alt="" className="w-full h-full object-cover" />
+                  : initials}
               </div>
-              {profile.is_live && (
+              {profile.isLive && (
                 <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-live text-white text-[9.5px] font-black px-2 py-0.5 rounded-full border-2 border-white">LIVE</div>
               )}
             </div>
             <div className="flex gap-2 pb-1">
               {isOwnProfile ? (
                 <>
-                  <button onClick={() => setShowEdit(true)} className="px-4 py-2 border border-gray-200 rounded-full text-[13px] font-bold hover:border-gray-400 transition">✏️ Edit Profile</button>
-                  <button onClick={() => showToast('🔴 Starting stream…')} className="px-4 py-2 bg-live text-white rounded-full text-[13px] font-bold hover:opacity-90 transition">🔴 Go Live</button>
+                  <button onClick={() => setShowEdit(true)} className="inline-flex items-center gap-1.5 px-4 py-2 border border-gray-200 rounded-full text-[13px] font-bold hover:border-gray-400 transition">
+                    <Pencil className="w-3.5 h-3.5" strokeWidth={2.5} /> Edit Profile
+                  </button>
+                  <button onClick={() => showToast('Starting stream…')} className="inline-flex items-center gap-1.5 px-4 py-2 bg-live text-white rounded-full text-[13px] font-bold hover:opacity-90 transition">
+                    <Radio className="w-3.5 h-3.5" strokeWidth={2.5} /> Go Live
+                  </button>
                 </>
               ) : (
                 <>
-                  <button onClick={handleFollow} className={`px-4 py-2 rounded-full text-[13px] font-bold transition ${isFollowing ? 'bg-gray-100 text-gray-500 hover:bg-gray-200' : 'border border-accent text-accent hover:bg-accent hover:text-white'}`}>
-                    {isFollowing ? '✓ Following' : '+ Follow'}
+                  <button onClick={handleFollow} className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-bold transition ${isFollowing ? 'bg-gray-100 text-gray-500 hover:bg-gray-200' : 'border border-accent text-accent hover:bg-accent hover:text-white'}`}>
+                    {isFollowing
+                      ? <><Check className="w-3.5 h-3.5" strokeWidth={3} /> Following</>
+                      : <><Plus className="w-3.5 h-3.5" strokeWidth={3} /> Follow</>}
                   </button>
-                  <button onClick={handleConnect} disabled={isConnected} className={`px-4 py-2 rounded-full text-[13px] font-bold transition ${isConnected ? 'bg-gray-100 text-gray-500' : 'bg-accent text-white hover:bg-accent-dk'}`}>
-                    {isConnected ? '✓ Connected' : '🤝 Connect'}
+                  <button onClick={handleConnect} disabled={isConnected} className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-bold transition ${isConnected ? 'bg-gray-100 text-gray-500' : 'bg-accent text-white hover:bg-accent-dk'}`}>
+                    {isConnected
+                      ? <><Check className="w-3.5 h-3.5" strokeWidth={3} /> Connected</>
+                      : <><Handshake className="w-3.5 h-3.5" strokeWidth={2.5} /> Connect</>}
                   </button>
                 </>
               )}
@@ -184,7 +221,15 @@ export default function ProfilePage() {
           </div>
 
           <h1 className="text-[20px] font-extrabold">{profile.displayName}</h1>
-          <div className="text-[13px] text-gray-400 mb-2">@{profile.handle}{profile.category && ` · ${profile.category}`}{profile.location && ` · 📍 ${profile.location}`}</div>
+          <div className="flex items-center flex-wrap gap-x-1.5 text-[13px] text-gray-400 mb-2">
+            <span>@{profile.handle}</span>
+            {profile.category && <span>· {profile.category}</span>}
+            {profile.location && (
+              <span className="inline-flex items-center gap-1">
+                · <MapPin className="w-3 h-3" strokeWidth={2.5} /> {profile.location}
+              </span>
+            )}
+          </div>
           {profile.bio && <p className="text-[13.5px] text-gray-600 leading-relaxed mb-3 max-w-xl">{profile.bio}</p>}
 
           {/* Platform badges */}
@@ -244,17 +289,21 @@ export default function ProfilePage() {
             <div className="space-y-3">
               {posts.length === 0 ? (
                 <div className="text-center py-12">
-                  <div className="text-4xl mb-3">📝</div>
+                  <FileText className="w-8 h-8 text-gray-300 mx-auto mb-3" strokeWidth={1.75} />
                   <div className="font-bold text-gray-600">{isOwnProfile ? "You haven't posted yet" : "No posts yet"}</div>
-                  <div className="text-sm text-gray-400 mt-1">{isOwnProfile ? "Share your first post from the Feed!" : "Check back later"}</div>
+                  <div className="text-sm text-gray-400 mt-1">{isOwnProfile ? "Share your first post from the Feed." : "Check back later."}</div>
                 </div>
               ) : posts.map(post => (
                 <div key={post.id} className="border border-gray-200 rounded-xl p-4 hover:border-gray-300 transition">
                   <p className="text-[13.5px] text-gray-700 leading-relaxed">{post.content}</p>
                   <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
                     <div className="flex gap-4 text-[12px] text-gray-400">
-                      <span>❤️ {post.likesCount || 0}</span>
-                      <span>💬 {post.commentsCount || 0}</span>
+                      <span className="inline-flex items-center gap-1">
+                        <Heart className="w-3.5 h-3.5" strokeWidth={2.5} /> {post.likesCount || 0}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <MessageCircle className="w-3.5 h-3.5" strokeWidth={2.5} /> {post.commentsCount || 0}
+                      </span>
                     </div>
                     <span className="text-[11px] text-gray-400">{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</span>
                   </div>
@@ -268,7 +317,7 @@ export default function ProfilePage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-extrabold text-[15px]">Stream Schedule</h3>
-                {isOwnProfile && <button onClick={() => showToast('📅 Schedule editor coming soon!')} className="text-[12.5px] font-bold text-accent hover:underline">Edit Schedule</button>}
+                {isOwnProfile && <button onClick={() => showToast('Schedule editor coming soon')} className="text-[12.5px] font-bold text-accent hover:underline">Edit Schedule</button>}
               </div>
               {SCHEDULE.map((s, i) => (
                 <div key={i} className="flex items-center gap-4 p-4 border border-gray-200 rounded-xl hover:border-accent hover:bg-accent-lt transition">
@@ -278,9 +327,15 @@ export default function ProfilePage() {
                   </div>
                   <div className="flex-1">
                     <div className="text-[13.5px] font-bold">{s.game}</div>
-                    <div className="text-[11.5px] text-gray-400">{s.platform} · {s.duration}</div>
+                    <div className="flex items-center gap-1.5 text-[11.5px] text-gray-400 mt-0.5">
+                      <span className={`inline-block w-1.5 h-1.5 rounded-full ${PLATFORM_DOT[s.platform] || 'bg-gray-400'}`} />
+                      <span className="capitalize">{s.platform}</span>
+                      <span>· {s.duration}</span>
+                    </div>
                   </div>
-                  <div className="text-[11px] text-gray-300 text-right">⏱ {s.duration}</div>
+                  <div className="inline-flex items-center gap-1 text-[11px] text-gray-300">
+                    <Clock className="w-3 h-3" strokeWidth={2.5} /> {s.duration}
+                  </div>
                 </div>
               ))}
             </div>
@@ -291,19 +346,23 @@ export default function ProfilePage() {
             <div>
               <div className="grid grid-cols-2 gap-3 mb-4">
                 {[
-                  { label: 'Avg Viewers', value: '3,240', icon: '👁️', color: 'text-accent' },
-                  { label: 'Peak Viewers', value: '12,890', icon: '🚀', color: 'text-green-600' },
-                  { label: 'Hours Streamed', value: '487h', icon: '⏱', color: 'text-blue-500' },
-                  { label: 'Total Followers', value: profile.followersCount > 0 ? profile.followersCount.toLocaleString() : '—', icon: '👥', color: 'text-purple-500' },
+                  { label: 'Avg Viewers',    value: '3,240',   Icon: Eye,         color: 'text-accent',     bg: 'bg-accent-lt' },
+                  { label: 'Peak Viewers',   value: '12,890',  Icon: Rocket,      color: 'text-green-600',  bg: 'bg-green-50' },
+                  { label: 'Hours Streamed', value: '487h',    Icon: Clock,       color: 'text-blue-500',   bg: 'bg-blue-50' },
+                  { label: 'Total Followers', value: profile.followersCount > 0 ? profile.followersCount.toLocaleString() : '—',
+                    Icon: Users, color: 'text-purple-500', bg: 'bg-purple-50' },
                 ].map(s => (
                   <div key={s.label} className="border border-gray-200 rounded-xl p-4 text-center">
-                    <div className="text-2xl mb-1">{s.icon}</div>
+                    <div className={`w-9 h-9 ${s.bg} rounded-full flex items-center justify-center mx-auto mb-1.5`}>
+                      <s.Icon className={`w-4 h-4 ${s.color}`} strokeWidth={2.25} />
+                    </div>
                     <div className={`text-[22px] font-extrabold ${s.color}`}>{s.value}</div>
                     <div className="text-[11.5px] text-gray-400">{s.label}</div>
                   </div>
                 ))}
               </div>
-              <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl text-center text-[13px] text-gray-500">
+              <div className="inline-flex items-center justify-center gap-2 w-full p-4 bg-gray-50 border border-gray-200 rounded-xl text-[13px] text-gray-500">
+                <BarChart3 className="w-4 h-4 text-gray-400" strokeWidth={2.25} />
                 Connect your streaming platforms to show live stats here
               </div>
             </div>
@@ -356,7 +415,9 @@ export default function ProfilePage() {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-5">
               <h3 className="text-[17px] font-extrabold">Edit Profile</h3>
-              <button onClick={() => setShowEdit(false)} className="text-gray-400 text-xl hover:text-gray-700">✕</button>
+              <button onClick={() => setShowEdit(false)} aria-label="Close" className="text-gray-400 hover:text-gray-700 transition">
+                <X className="w-5 h-5" strokeWidth={2.5} />
+              </button>
             </div>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-2">

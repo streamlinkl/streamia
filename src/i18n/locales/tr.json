@@ -1,5 +1,5 @@
 {
-  "brand": { "name": "Stream Link", "tagline": "Yayıncılar için profesyonel platform." },
+  "brand": { "name": "StreamLink", "tagline": "Yayıncılar için profesyonel platform." },
   "nav": {
     "home": "Akış",
     "network": "Ağ",
@@ -62,7 +62,7 @@
     },
     "cta": {
       "heading": "Yayıncılık kariyerini büyütmeye hazır mısın?",
-      "subtitle": "Binlerce yayıncı zaten Stream Link'te. Sonsuza dek ücretsiz.",
+      "subtitle": "Binlerce yayıncı zaten StreamLink'te. Sonsuza dek ücretsiz.",
       "primary": "Ücretsiz profili oluştur",
       "secondary": "Giriş yap"
     },

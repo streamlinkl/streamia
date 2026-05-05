@@ -164,8 +164,8 @@ export default function MessagesPage() {
           <AlertTriangle className="w-4 h-4 flex-shrink-0" strokeWidth={2.5} />
           <div className="flex-1 text-[12.5px] font-semibold">
             {bannerTone === 'danger'
-              ? 'Daily message limit reached.'
-              : `${quota.remaining} of ${quota.limit} messages left today on the Free plan.`}
+              ? 'Free plan: you can DM up to 2 new creators per day. Upgrade to message anyone.'
+              : `${quota.remaining} of ${quota.limit} new creators left to DM today on the Free plan.`}
           </div>
           <button
             onClick={() => startUpgrade('pro', 'monthly')}
