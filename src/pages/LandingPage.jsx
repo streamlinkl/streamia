@@ -63,7 +63,7 @@ export default function LandingPage() {
             <span className="w-9 h-9 bg-gray-900 rounded-xl flex items-center justify-center text-white">
               <Zap className="w-4 h-4" strokeWidth={2.5} />
             </span>
-            Stream <span className="text-accent">Link</span>
+            Stream<span className="text-accent">Link</span>
           </Link>
           <div className="hidden md:flex items-center gap-7 ml-10 text-[13.5px] text-gray-500 font-semibold">
             <a href="#features" className="hover:text-gray-900 transition">{t('landing.features.badge')}</a>
@@ -322,7 +322,7 @@ export default function LandingPage() {
             <span className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center text-white">
               <Zap className="w-3.5 h-3.5" strokeWidth={2.5} />
             </span>
-            Stream <span className="text-accent">Link</span>
+            Stream<span className="text-accent">Link</span>
           </Link>
           <div className="flex items-center gap-5 text-[12.5px] font-semibold text-gray-500">
             <a href="#features" className="hover:text-gray-900 transition">{t('landing.features.badge')}</a>

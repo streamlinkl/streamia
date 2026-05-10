@@ -42,7 +42,13 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const targetId = id || myProfile?.id
-    if (!targetId) return
+    if (!targetId) {
+      // Keep "loading" true while auth is still bootstrapping; once we know
+      // we have neither an :id param nor a logged-in profile, we have nothing
+      // to load — bail out of the spinner so the user sees an empty state.
+      if (!id && myProfile === null) setLoading(false)
+      return
+    }
     let cancelled = false
     const load = async () => {
       setLoading(true)
@@ -65,8 +71,10 @@ export default function ProfilePage() {
           kickUrl: p?.kickUrl || '',
           youtubeUrl: p?.youtubeUrl || '',
           platforms: p?.platforms || [],
+          contentCategories: p?.contentCategories || [],
           avatarUrl: p?.avatarUrl || '',
           bannerUrl: p?.bannerUrl || '',
+          liveStreamUrl: p?.liveStreamUrl || '',
         })
         setIsFollowing(Boolean(p?.isFollowing))
         setIsConnected(p?.connectionStatus === 'accepted')
@@ -199,8 +207,17 @@ export default function ProfilePage() {
                   <button onClick={() => setShowEdit(true)} className="inline-flex items-center gap-1.5 px-4 py-2 border border-gray-200 rounded-full text-[13px] font-bold hover:border-gray-400 transition">
                     <Pencil className="w-3.5 h-3.5" strokeWidth={2.5} /> Edit Profile
                   </button>
-                  <button onClick={() => showToast('Starting stream…')} className="inline-flex items-center gap-1.5 px-4 py-2 bg-live text-white rounded-full text-[13px] font-bold hover:opacity-90 transition">
-                    <Radio className="w-3.5 h-3.5" strokeWidth={2.5} /> Go Live
+                  <button onClick={async () => {
+                    if (profile.isLive) {
+                      try { const updated = await profileApi.setLive(false, null); setProfile(updated); showToast('Marked as offline') } catch (err) { showToast(err.message || 'Failed', 'error') }
+                      return
+                    }
+                    const url = window.prompt('Paste your live stream URL (Twitch/Kick/YouTube/etc.):', profile.liveStreamUrl || profile.twitchUrl || profile.kickUrl || profile.youtubeUrl || '')
+                    if (!url) return
+                    try { const updated = await profileApi.setLive(true, url.trim()); setProfile(updated); showToast('You are now live') } catch (err) { showToast(err.message || 'Failed to go live', 'error') }
+                  }} className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-bold transition ${profile.isLive ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' : 'bg-live text-white hover:opacity-90'}`}>
+                    <Radio className="w-3.5 h-3.5" strokeWidth={2.5} />
+                    {profile.isLive ? 'End Stream' : 'Go Live'}
                   </button>
                 </>
               ) : (
@@ -231,6 +248,14 @@ export default function ProfilePage() {
             )}
           </div>
           {profile.bio && <p className="text-[13.5px] text-gray-600 leading-relaxed mb-3 max-w-xl">{profile.bio}</p>}
+
+          {profile.contentCategories?.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {profile.contentCategories.map((cat) => (
+                <span key={cat} className="inline-flex items-center px-2.5 py-1 bg-pink-50 text-pink-700 rounded-full text-[11px] font-bold">{cat}</span>
+              ))}
+            </div>
+          )}
 
           {/* Platform badges */}
           {profile.platforms?.length > 0 && (
@@ -443,6 +468,7 @@ export default function ProfilePage() {
                 { key: 'twitchUrl', label: 'Twitch URL', placeholder: 'https://twitch.tv/you' },
                 { key: 'kickUrl', label: 'Kick URL', placeholder: 'https://kick.com/you' },
                 { key: 'youtubeUrl', label: 'YouTube URL', placeholder: 'https://youtube.com/@you' },
+                { key: 'liveStreamUrl', label: 'Live stream URL (used by Go Live button)', placeholder: 'https://twitch.tv/you' },
               ].map(field => (
                 <div key={field.key}>
                   <label className="block text-[11.5px] font-bold text-gray-500 mb-1">{field.label}</label>
@@ -481,6 +507,29 @@ export default function ProfilePage() {
                   onChange={(slugs) => setEditForm({ ...editForm, platforms: slugs })}
                 />
               </div>
+              {(profile?.contentCategories?.length > 0 || editForm.contentCategories?.length > 0) && (
+                <div>
+                  <label className="block text-[11.5px] font-bold text-gray-500 mb-1.5">Content niches</label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {['Fashion & Style','Beauty','Fitness & Wellness','Lifestyle','Travel','Food & Drinks','Tech & AI','Finance & Business','Entertainment','Gaming','Education / Niche Knowledge','Dating & Relationships','Adult Content'].map((cat) => {
+                      const active = (editForm.contentCategories || []).includes(cat)
+                      return (
+                        <button key={cat} type="button"
+                          onClick={() => setEditForm((f) => ({
+                            ...f,
+                            contentCategories: active
+                              ? f.contentCategories.filter((c) => c !== cat)
+                              : [...(f.contentCategories || []), cat]
+                          }))}
+                          className={`text-left py-1.5 px-2.5 rounded-lg border text-[11px] font-bold transition
+                            ${active ? 'border-pink-500 bg-pink-50 text-pink-700' : 'border-gray-200 text-gray-500 hover:border-gray-400'}`}>
+                          {cat}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="block text-[11.5px] font-bold text-gray-500 mb-1">Bio</label>
                 <textarea rows={3} placeholder="Tell your story…"

@@ -22,7 +22,7 @@ export default function CompaniesPage() {
   const [submittingReview, setSubmittingReview] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
   const [followed, setFollowed] = useState(new Set())
-  const [createForm, setCreateForm] = useState({ name: '', industry: '', website: '', description: '', location: '', logoUrl: '', looking_for: [] })
+  const [createForm, setCreateForm] = useState({ name: '', industry: '', website: '', description: '', location: '', logoUrl: '', bannerUrl: '', looking_for: [] })
   const [creating, setCreating] = useState(false)
   const [searchQ, setSearchQ] = useState('')
 
@@ -57,11 +57,12 @@ export default function CompaniesPage() {
         description: createForm.description || null,
         location: createForm.location || null,
         logoUrl: createForm.logoUrl || null,
+        bannerUrl: createForm.bannerUrl || null,
         lookingFor: createForm.looking_for,
       })
       showToast('Company page created')
       setShowCreate(false)
-      setCreateForm({ name: '', industry: '', website: '', description: '', location: '', logoUrl: '', looking_for: [] })
+      setCreateForm({ name: '', industry: '', website: '', description: '', location: '', logoUrl: '', bannerUrl: '', looking_for: [] })
       fetchCompanies()
     } catch (err) {
       if (err.code === 'SLUG_TAKEN') showToast('A company with that name exists', 'error')
@@ -395,6 +396,17 @@ export default function CompaniesPage() {
                   onChange={(url) => setCreateForm({ ...createForm, logoUrl: url })}
                   label="Upload logo"
                 />
+                <div className="text-[10.5px] text-gray-400 mt-1">Square — appears on cards and in the page header.</div>
+              </div>
+              <div>
+                <label className="block text-[12px] font-bold text-gray-500 mb-1.5">Cover image</label>
+                <ImageUpload
+                  kind="banner"
+                  value={createForm.bannerUrl}
+                  onChange={(url) => setCreateForm({ ...createForm, bannerUrl: url })}
+                  label="Upload cover"
+                />
+                <div className="text-[10.5px] text-gray-400 mt-1">Wide banner shown above your page header. Recommended 1500×400.</div>
               </div>
               <div>
                 <label className="block text-[12px] font-bold text-gray-500 mb-1.5">Company Name *</label>

@@ -65,7 +65,7 @@ export default function AppLayout() {
           <span className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center text-white">
             <Zap className="w-4 h-4" strokeWidth={2.5} />
           </span>
-          Stream <span className="text-accent">Link</span>
+          Stream<span className="text-accent">Link</span>
         </div>
 
         <div className="relative flex-1 max-w-[240px] ml-2">
@@ -124,7 +124,7 @@ export default function AppLayout() {
           <span className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center text-white">
             <Zap className="w-4 h-4" strokeWidth={2.5} />
           </span>
-          Stream <span className="text-accent">Link</span>
+          Stream<span className="text-accent">Link</span>
         </div>
 
         <div className="flex items-center gap-2">

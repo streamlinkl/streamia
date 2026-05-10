@@ -1,15 +1,32 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { ArrowRight, Building2, Loader2, Sparkles, Tv, Zap } from 'lucide-react'
 import { authApi, profileApi } from '@/lib/api'
 import { useAuthStore } from '@/lib/store'
 import PlatformPicker from '@/components/ui/PlatformPicker'
 import ImageUpload from '@/components/ui/ImageUpload'
 import { COUNTRIES, LANGUAGES } from '@/lib/countries'
 
+export const INFLUENCER_CATEGORIES = [
+  'Fashion & Style',
+  'Beauty',
+  'Fitness & Wellness',
+  'Lifestyle',
+  'Travel',
+  'Food & Drinks',
+  'Tech & AI',
+  'Finance & Business',
+  'Entertainment',
+  'Gaming',
+  'Education / Niche Knowledge',
+  'Dating & Relationships',
+  'Adult Content',
+]
+
 export default function RegisterPage() {
   const navigate = useNavigate()
   const acceptSession = useAuthStore((s) => s.acceptSession)
-  const [accountType, setAccountType] = useState(null) // null | 'streamer' | 'company'
+  const [accountType, setAccountType] = useState(null) // null | 'streamer' | 'influencer'
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   const [form, setForm] = useState({
@@ -19,8 +36,20 @@ export default function RegisterPage() {
     bio: '', category: '',
     country: 'TR', language: 'en',
     platforms: [],
+    contentCategories: [],
     avatar_url: '',
   })
+
+  const isInfluencer = accountType === 'influencer'
+
+  const toggleCategory = (cat) => {
+    setForm((f) => ({
+      ...f,
+      contentCategories: f.contentCategories.includes(cat)
+        ? f.contentCategories.filter((c) => c !== cat)
+        : [...f.contentCategories, cat],
+    }))
+  }
 
   const handleRegister = async (e) => {
     e.preventDefault()
@@ -46,15 +75,17 @@ export default function RegisterPage() {
         firstName: form.first_name.trim() || null,
         lastName: form.last_name.trim() || null,
         country: form.country || undefined,
-        language: form.language || 'tr',
+        language: form.language || 'en',
+        role: isInfluencer ? 'influencer' : 'streamer',
+        platforms: isInfluencer ? [] : form.platforms,
+        contentCategories: isInfluencer ? form.contentCategories : [],
       })
       await acceptSession(result)
 
-      // Patch additional profile fields that don't fit the signup body
+      // Patch fields that don't fit the signup body
       const patch = {}
       if (form.bio) patch.bio = form.bio
       if (form.category) patch.category = form.category
-      if (form.platforms.length) patch.platforms = form.platforms
       if (form.avatar_url) patch.avatarUrl = form.avatar_url
       if (Object.keys(patch).length) {
         try { await profileApi.updateMe(patch) } catch { /* non-fatal */ }
@@ -70,28 +101,49 @@ export default function RegisterPage() {
     }
   }
 
-  // Show account type picker first
+  // Step 1 — pick account type
   if (!accountType) {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center px-4 py-8">
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm w-full max-w-sm p-8">
           <div className="flex items-center gap-2 text-xl font-extrabold tracking-tight mb-6">
-            <div className="w-9 h-9 bg-accent rounded-lg flex items-center justify-center text-white">⚡</div>
-            Stream <span className="text-accent">Link</span>
+            <div className="w-9 h-9 bg-accent rounded-lg flex items-center justify-center text-white">
+              <Zap className="w-4 h-4" strokeWidth={2.5} />
+            </div>
+            Stream<span className="text-accent">Link</span>
           </div>
-          <h1 className="text-[22px] font-extrabold mb-1">Join Streamia</h1>
-          <p className="text-sm text-gray-400 mb-6">How do you want to use Streamia?</p>
+          <h1 className="text-[22px] font-extrabold mb-1">Join StreamLink</h1>
+          <p className="text-sm text-gray-400 mb-6">How do you want to use StreamLink?</p>
 
           <div className="space-y-3">
             <button onClick={() => setAccountType('streamer')}
               className="w-full p-4 border-2 border-gray-200 hover:border-accent hover:bg-accent-lt rounded-2xl text-left transition group">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-accent to-purple-400 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">🎮</div>
+                <div className="w-12 h-12 bg-gradient-to-br from-accent to-purple-400 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Tv className="w-6 h-6 text-white" strokeWidth={2.25} />
+                </div>
                 <div className="flex-1">
                   <div className="font-extrabold text-[15px] group-hover:text-accent transition">I'm a Streamer</div>
                   <div className="text-[12.5px] text-gray-400 mt-0.5">Find brand deals, connect with creators, grow your network</div>
                 </div>
-                <span className="text-gray-300 group-hover:text-accent text-xl transition">→</span>
+                <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-accent transition" strokeWidth={2.25} />
+              </div>
+              <div className="mt-2 ml-16">
+                <span className="text-[11px] bg-green-50 text-green-700 font-bold px-2 py-0.5 rounded-full">Always Free</span>
+              </div>
+            </button>
+
+            <button onClick={() => setAccountType('influencer')}
+              className="w-full p-4 border-2 border-gray-200 hover:border-pink-500 hover:bg-pink-50 rounded-2xl text-left transition group">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-rose-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-6 h-6 text-white" strokeWidth={2.25} />
+                </div>
+                <div className="flex-1">
+                  <div className="font-extrabold text-[15px] group-hover:text-pink-600 transition">I'm an Influencer</div>
+                  <div className="text-[12.5px] text-gray-400 mt-0.5">Pick your niches — fashion, beauty, lifestyle, tech and more</div>
+                </div>
+                <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-pink-500 transition" strokeWidth={2.25} />
               </div>
               <div className="mt-2 ml-16">
                 <span className="text-[11px] bg-green-50 text-green-700 font-bold px-2 py-0.5 rounded-full">Always Free</span>
@@ -101,12 +153,14 @@ export default function RegisterPage() {
             <button onClick={() => navigate('/register/company')}
               className="w-full p-4 border-2 border-gray-200 hover:border-purple-500 hover:bg-purple-50 rounded-2xl text-left transition group">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">🏢</div>
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Building2 className="w-6 h-6 text-white" strokeWidth={2.25} />
+                </div>
                 <div className="flex-1">
                   <div className="font-extrabold text-[15px] group-hover:text-purple-600 transition">I'm a Brand / Company</div>
                   <div className="text-[12.5px] text-gray-400 mt-0.5">Post deals, find creators, run campaigns at scale</div>
                 </div>
-                <span className="text-gray-300 group-hover:text-purple-500 text-xl transition">→</span>
+                <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-purple-500 transition" strokeWidth={2.25} />
               </div>
               <div className="mt-2 ml-16">
                 <span className="text-[11px] bg-purple-50 text-purple-700 font-bold px-2 py-0.5 rounded-full">Free + Paid plans</span>
@@ -127,12 +181,16 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-bg flex items-center justify-center px-4 py-8">
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm w-full max-w-sm p-8">
         <div className="flex items-center gap-2 text-xl font-extrabold tracking-tight mb-5">
-          <div className="w-9 h-9 bg-accent rounded-lg flex items-center justify-center text-white">⚡</div>
-          Stream <span className="text-accent">Link</span>
+          <div className="w-9 h-9 bg-accent rounded-lg flex items-center justify-center text-white">
+            <Zap className="w-4 h-4" strokeWidth={2.5} />
+          </div>
+          Stream<span className="text-accent">Link</span>
         </div>
 
         <h1 className="text-2xl font-extrabold mb-1">Create your profile</h1>
-        <p className="text-sm text-gray-400 mb-5">Join 42,000+ streamers</p>
+        <p className="text-sm text-gray-400 mb-5">
+          {isInfluencer ? 'Tell us what content you create' : 'Join 42,000+ streamers'}
+        </p>
 
         {errorMsg && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-[12.5px] text-red-700 font-semibold leading-relaxed">
@@ -243,29 +301,52 @@ export default function RegisterPage() {
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-gray-500 mb-2">Your Streaming Platforms</label>
-            <PlatformPicker
-              value={form.platforms}
-              onChange={(slugs) => setForm({ ...form, platforms: slugs })}
-            />
-          </div>
+          {isInfluencer ? (
+            <div>
+              <label className="block text-xs font-bold text-gray-500 mb-2">Your Content Niches</label>
+              <div className="grid grid-cols-2 gap-2">
+                {INFLUENCER_CATEGORIES.map((cat) => {
+                  const active = form.contentCategories.includes(cat)
+                  return (
+                    <button key={cat} type="button" onClick={() => toggleCategory(cat)}
+                      className={`text-left py-2 px-3 rounded-xl border text-[12px] font-bold transition
+                        ${active ? 'border-pink-500 bg-pink-50 text-pink-700' : 'border-gray-200 text-gray-500 hover:border-gray-400'}`}>
+                      {cat}
+                    </button>
+                  )
+                })}
+              </div>
+              {form.contentCategories.length === 0 && (
+                <div className="text-[10.5px] text-gray-400 mt-1.5">Pick at least one category to get matched with brands.</div>
+              )}
+            </div>
+          ) : (
+            <div>
+              <label className="block text-xs font-bold text-gray-500 mb-2">Your Streaming Platforms</label>
+              <PlatformPicker
+                value={form.platforms}
+                onChange={(slugs) => setForm({ ...form, platforms: slugs })}
+              />
+            </div>
+          )}
 
-          <div>
-            <label className="block text-xs font-bold text-gray-500 mb-1">Content Category</label>
-            <input type="text"
-              className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent focus:bg-white transition"
-              placeholder="e.g. FPS, Just Chatting, Music…"
-              value={form.category}
-              onChange={e => setForm({ ...form, category: e.target.value })}
-            />
-          </div>
+          {!isInfluencer && (
+            <div>
+              <label className="block text-xs font-bold text-gray-500 mb-1">Content Category</label>
+              <input type="text"
+                className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent focus:bg-white transition"
+                placeholder="e.g. FPS, Just Chatting, Music…"
+                value={form.category}
+                onChange={e => setForm({ ...form, category: e.target.value })}
+              />
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-bold text-gray-500 mb-1">Bio</label>
             <textarea rows={2}
               className="w-full bg-bg border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-accent focus:bg-white transition resize-none"
-              placeholder="Tell other streamers about yourself…"
+              placeholder={isInfluencer ? 'Tell brands about yourself…' : 'Tell other streamers about yourself…'}
               value={form.bio}
               onChange={e => setForm({ ...form, bio: e.target.value })}
             />
@@ -276,10 +357,12 @@ export default function RegisterPage() {
           >
             {loading ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2.5} />
                 Creating profile…
               </>
-            ) : 'Create my profile →'}
+            ) : (
+              <>Create my profile <ArrowRight className="w-4 h-4" strokeWidth={2.5} /></>
+            )}
           </button>
         </form>
 

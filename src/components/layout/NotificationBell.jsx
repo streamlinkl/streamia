@@ -10,9 +10,10 @@ const TYPE_META = {
   connection_accepted: { Icon: BadgeCheck,  color: 'text-emerald-500', text: 'accepted your connection request' },
   follow:              { Icon: UserPlus,    color: 'text-blue-500',    text: 'followed you' },
   message:             { Icon: MessageSquare, color: 'text-gray-700',  text: 'sent you a message' },
-  post_like:           { Icon: Heart,       color: 'text-rose-500',    text: 'liked your post' },
-  profile_view:        { Icon: Eye,         color: 'text-indigo-500',  text: 'viewed your profile' },
-  admin:               { Icon: BadgeCheck,  color: 'text-amber-500',   text: '' },
+  post_like:           { Icon: Heart,        color: 'text-rose-500',    text: 'liked your post' },
+  post_comment:        { Icon: MessageSquare, color: 'text-blue-500',   text: 'commented on your post' },
+  profile_view:        { Icon: Eye,          color: 'text-indigo-500',  text: 'viewed your profile' },
+  admin:               { Icon: BadgeCheck,   color: 'text-amber-500',   text: '' },
 }
 
 export default function NotificationBell() {

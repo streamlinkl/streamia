@@ -136,6 +136,8 @@ export const profileApi = {
   suggestions: (limit) => api.get('/api/profiles/suggestions', { query: { limit } }),
   connections: (id, limit) => api.get(`/api/profiles/${id}/connections`, { query: { limit } }),
   recordView: (id) => api.post(`/api/profiles/${id}/view`),
+  liveNow: (limit) => api.get('/api/profiles/live', { query: { limit } }),
+  setLive: (isLive, liveStreamUrl) => api.patch('/api/profiles/me/live', { isLive, liveStreamUrl }),
 }
 
 export const profileViewApi = {
@@ -147,6 +149,9 @@ export const postApi = {
   feed: (cursor, limit) => api.get('/api/posts/feed', { query: { cursor, limit } }),
   create: (body) => api.post('/api/posts', body),
   byUser: (userId, cursor, limit) => api.get(`/api/posts/user/${userId}`, { query: { cursor, limit } }),
+  comments: (id, cursor, limit) => api.get(`/api/posts/${id}/comments`, { query: { cursor, limit } }),
+  addComment: (id, content) => api.post(`/api/posts/${id}/comments`, { content }),
+  deleteComment: (commentId) => api.delete(`/api/posts/comments/${commentId}`),
   delete: (id) => api.delete(`/api/posts/${id}`),
   like: (id) => api.post(`/api/posts/${id}/like`),
   unlike: (id) => api.delete(`/api/posts/${id}/like`),

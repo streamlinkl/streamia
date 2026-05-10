@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import useSWR, { mutate } from 'swr'
 import { useTranslation } from 'react-i18next'
-import { Heart, Image as ImageIcon, Loader2, MessageCircle, Share2, X } from 'lucide-react'
-import { postApi, uploadApi, uploadFile } from '@/lib/api'
+import { Check, Heart, Image as ImageIcon, Link2, Loader2, MessageCircle, Send, Share2, Trash2, X } from 'lucide-react'
+import { postApi, profileApi, uploadApi, uploadFile } from '@/lib/api'
 import { useAuthStore, useAppStore } from '@/lib/store'
 import { formatDistanceToNow } from 'date-fns'
 import { SkeletonPost, SkeletonProfile } from '@/components/ui/Skeleton'
@@ -54,9 +55,14 @@ function LikesModal({ postId, onClose }) {
 
 // ── Post Card ──
 function PostCard({ post }) {
+  const { profile: me } = useAuthStore()
+  const { showToast } = useAppStore()
   const [liked, setLiked] = useState(Boolean(post.viewerHasLiked))
   const [count, setCount] = useState(post.likesCount || 0)
+  const [commentCount, setCommentCount] = useState(post.commentsCount || 0)
   const [showLikers, setShowLikers] = useState(false)
+  const [showComments, setShowComments] = useState(false)
+  const [shared, setShared] = useState(false)
   const initials = post.author?.displayName?.slice(0, 2).toUpperCase() || '??'
   const timeAgo = post.createdAt ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }) : ''
 
@@ -68,21 +74,36 @@ function PostCard({ post }) {
       const res = nextLiked ? await postApi.like(post.id) : await postApi.unlike(post.id)
       if (typeof res?.likesCount === 'number') setCount(res.likesCount)
     } catch {
-      // revert on failure
       setLiked(!nextLiked)
       setCount(c => c + (nextLiked ? -1 : 1))
+    }
+  }
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/profile/${post.author?.id}`
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `${post.author?.displayName} on StreamLink`, text: post.content, url })
+      } else {
+        await navigator.clipboard.writeText(url)
+        showToast('Link copied to clipboard')
+      }
+      setShared(true)
+      setTimeout(() => setShared(false), 1500)
+    } catch {
+      // user cancelled native share — no toast
     }
   }
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition">
       <div className="flex gap-3 p-4 pb-0 items-start">
-        <div className="w-11 h-11 rounded-full bg-gradient-to-br from-accent to-purple-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden">
+        <Link to={`/profile/${post.author?.id}`} className="w-11 h-11 rounded-full bg-gradient-to-br from-accent to-purple-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden hover:opacity-80 transition">
           {post.author?.avatarUrl ? <img src={post.author.avatarUrl} alt="" className="w-full h-full object-cover" /> : initials}
-        </div>
+        </Link>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-[13.5px] font-bold">{post.author?.displayName || 'Unknown'}</span>
+            <Link to={`/profile/${post.author?.id}`} className="text-[13.5px] font-bold hover:underline">{post.author?.displayName || 'Unknown'}</Link>
             {post.author?.isLive && <span className="text-[9.5px] bg-live text-white font-black px-1.5 py-0.5 rounded-full">LIVE</span>}
           </div>
           <div className="flex items-center gap-2 mt-0.5">
@@ -113,14 +134,127 @@ function PostCard({ post }) {
           <Heart className="w-4 h-4" fill={liked ? 'currentColor' : 'none'} strokeWidth={2.25} />
           <span onClick={(e) => { e.stopPropagation(); if (count > 0) setShowLikers(true) }} className={count > 0 ? 'hover:underline' : ''}>{count}</span>
         </button>
-        <button className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 text-[12px] font-semibold text-gray-500 hover:bg-gray-50 transition">
-          <MessageCircle className="w-4 h-4" strokeWidth={2.25} /> {post.commentsCount || 0}
+        <button onClick={() => setShowComments(s => !s)}
+          className={`flex-1 inline-flex items-center justify-center gap-2 py-2.5 text-[12px] font-semibold transition hover:bg-gray-50
+            ${showComments ? 'text-accent' : 'text-gray-500'}`}>
+          <MessageCircle className="w-4 h-4" strokeWidth={2.25} /> {commentCount}
         </button>
-        <button className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 text-[12px] font-semibold text-gray-500 hover:bg-gray-50 transition rounded-br-xl">
-          <Share2 className="w-4 h-4" strokeWidth={2.25} /> Share
+        <button onClick={handleShare}
+          className={`flex-1 inline-flex items-center justify-center gap-2 py-2.5 text-[12px] font-semibold transition hover:bg-gray-50 rounded-br-xl
+            ${shared ? 'text-emerald-600' : 'text-gray-500'}`}>
+          {shared
+            ? <><Check className="w-4 h-4" strokeWidth={2.5} /> Copied</>
+            : <><Share2 className="w-4 h-4" strokeWidth={2.25} /> Share</>}
         </button>
       </div>
+      {showComments && (
+        <CommentSection
+          postId={post.id}
+          me={me}
+          onCountChange={setCommentCount}
+        />
+      )}
       {showLikers && <LikesModal postId={post.id} onClose={() => setShowLikers(false)} />}
+    </div>
+  )
+}
+
+// ── Comments section (inline, reveals on click) ──
+function CommentSection({ postId, me, onCountChange }) {
+  const { showToast } = useAppStore()
+  const [items, setItems] = useState(null)
+  const [draft, setDraft] = useState('')
+  const [posting, setPosting] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    postApi.comments(postId, undefined, 50)
+      .then((res) => { if (!cancelled) setItems((res?.items || []).slice().reverse()) })
+      .catch(() => { if (!cancelled) setItems([]) })
+    return () => { cancelled = true }
+  }, [postId])
+
+  const submit = async () => {
+    const text = draft.trim()
+    if (!text || posting) return
+    setPosting(true)
+    try {
+      const created = await postApi.addComment(postId, text)
+      setItems((prev) => [...(prev ?? []), created])
+      onCountChange?.((c) => c + 1)
+      setDraft('')
+    } catch (err) {
+      showToast(err.message || 'Could not post comment', 'error')
+    } finally {
+      setPosting(false)
+    }
+  }
+
+  const remove = async (id) => {
+    try {
+      await postApi.deleteComment(id)
+      setItems((prev) => prev?.filter((c) => c.id !== id) ?? [])
+      onCountChange?.((c) => Math.max(c - 1, 0))
+    } catch (err) {
+      showToast(err.message || 'Could not delete', 'error')
+    }
+  }
+
+  return (
+    <div className="border-t border-gray-100 bg-gray-50/50 px-4 py-3">
+      {items === null ? (
+        <div className="flex justify-center py-3"><Loader2 className="w-4 h-4 text-gray-400 animate-spin" strokeWidth={2.5} /></div>
+      ) : items.length === 0 ? (
+        <div className="text-center py-2 text-[12px] text-gray-400">Be the first to comment.</div>
+      ) : (
+        <div className="space-y-2.5 mb-3">
+          {items.map((c) => (
+            <div key={c.id} className="flex items-start gap-2.5">
+              <Link to={`/profile/${c.author?.id}`} className="w-7 h-7 rounded-full bg-gradient-to-br from-accent to-purple-400 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 overflow-hidden">
+                {c.author?.avatarUrl
+                  ? <img src={c.author.avatarUrl} alt="" className="w-full h-full object-cover" />
+                  : (c.author?.displayName || '??').slice(0, 2).toUpperCase()}
+              </Link>
+              <div className="flex-1 min-w-0">
+                <div className="bg-white border border-gray-100 rounded-2xl px-3 py-2">
+                  <Link to={`/profile/${c.author?.id}`} className="text-[12px] font-extrabold hover:underline">{c.author?.displayName}</Link>
+                  <p className="text-[12.5px] text-gray-700 leading-snug whitespace-pre-wrap mt-0.5">{c.content}</p>
+                </div>
+                <div className="flex items-center gap-3 mt-1 px-3">
+                  <span className="text-[10.5px] text-gray-400">{formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}</span>
+                  {me?.id === c.author?.id && (
+                    <button onClick={() => remove(c.id)} className="inline-flex items-center gap-1 text-[10.5px] text-gray-400 hover:text-red-500 transition">
+                      <Trash2 className="w-3 h-3" strokeWidth={2.25} /> Delete
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="flex items-end gap-2">
+        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-accent to-purple-400 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 overflow-hidden">
+          {me?.avatarUrl
+            ? <img src={me.avatarUrl} alt="" className="w-full h-full object-cover" />
+            : (me?.displayName || '??').slice(0, 2).toUpperCase()}
+        </div>
+        <textarea
+          rows={1}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit() } }}
+          placeholder="Write a comment…"
+          className="flex-1 min-h-[34px] max-h-32 bg-white border border-gray-200 rounded-2xl px-3 py-1.5 text-[12.5px] outline-none focus:border-accent transition resize-none"
+        />
+        <button
+          onClick={submit}
+          disabled={!draft.trim() || posting}
+          className="inline-flex items-center gap-1 h-[34px] px-3 bg-accent hover:bg-accent-dk text-white text-[11.5px] font-bold rounded-full transition disabled:opacity-50 flex-shrink-0">
+          {posting ? <Loader2 className="w-3 h-3 animate-spin" strokeWidth={2.5} /> : <Send className="w-3 h-3" strokeWidth={2.5} />}
+          Post
+        </button>
+      </div>
     </div>
   )
 }
@@ -263,12 +397,49 @@ function ProfileSidebar({ profile }) {
   )
 }
 
-const LIVE_NOW = [
-  { name: 'NinjaStreams', viewers: '12.4K', game: 'Valorant' },
-  { name: 'PixelKnight', viewers: '8.2K', game: 'Fortnite' },
-  { name: 'StarCaster', viewers: '5.1K', game: 'Just Chatting' },
-]
-const TAGS = ['#FPS', '#JustChatting', '#Valorant', '#Minecraft', '#IRL', '#Music']
+function LiveNowSidebar() {
+  const { data: live } = useSWR('live-now', () => profileApi.liveNow(8), { refreshInterval: 60_000 })
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
+        <div className="w-2 h-2 bg-live rounded-full animate-pulse" />
+        <span className="text-[12.5px] font-extrabold">Live Now</span>
+      </div>
+      {!live ? (
+        <div className="px-4 py-6 text-center text-[11.5px] text-gray-400">Loading…</div>
+      ) : live.length === 0 ? (
+        <div className="px-4 py-6 text-center text-[11.5px] text-gray-400">No streamers live right now</div>
+      ) : (
+        live.map((s) => {
+          const initials = (s.displayName || '??').slice(0, 2).toUpperCase()
+          const Inner = (
+            <>
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-live to-red-400 flex items-center justify-center text-white font-bold text-xs overflow-hidden flex-shrink-0">
+                {s.avatarUrl ? <img src={s.avatarUrl} alt="" className="w-full h-full object-cover" /> : initials}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[12px] font-bold truncate">{s.displayName}</div>
+                <div className="text-[10.5px] text-gray-400 truncate">@{s.handle}{s.category ? ` · ${s.category}` : ''}</div>
+              </div>
+              <div className="w-1.5 h-1.5 bg-live rounded-full flex-shrink-0" />
+            </>
+          )
+          return s.liveStreamUrl ? (
+            <a key={s.id} href={s.liveStreamUrl} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition">
+              {Inner}
+            </a>
+          ) : (
+            <Link key={s.id} to={`/profile/${s.id}`}
+              className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition">
+              {Inner}
+            </Link>
+          )
+        })
+      )}
+    </div>
+  )
+}
 
 // ── Main Page ──
 export default function FeedPage() {
@@ -312,24 +483,7 @@ export default function FeedPage() {
 
         {/* Right sidebar — desktop only */}
         <aside className="hidden md:block space-y-3 sticky top-20">
-          <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
-              <div className="w-2 h-2 bg-live rounded-full animate-pulse" />
-              <span className="text-[12.5px] font-extrabold">Live Now</span>
-            </div>
-            {LIVE_NOW.map(s => (
-              <div key={s.name} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer transition">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-live to-red-400 flex items-center justify-center text-white font-bold text-xs">
-                  {s.name.slice(0, 2)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[12px] font-bold">{s.name}</div>
-                  <div className="text-[10.5px] text-gray-400">{s.game} · {s.viewers}</div>
-                </div>
-                <div className="w-1.5 h-1.5 bg-live rounded-full" />
-              </div>
-            ))}
-          </div>
+          <LiveNowSidebar />
         </aside>
       </div>
     </div>

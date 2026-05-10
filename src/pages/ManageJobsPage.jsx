@@ -14,6 +14,13 @@ import { companyApi, jobApi } from '@/lib/api'
 import { useAppStore, useAuthStore } from '@/lib/store'
 
 const JOB_TYPES = ['Sponsored Stream', 'Ambassador', 'Full Time', 'Contract', 'Event']
+const JOB_CATEGORIES = [
+  'Influencer Campaigns',
+  'Affiliate Marketing',
+  'Live Streaming',
+  'Adult Content Operations',
+  'Coin Reseller (Live Apps)',
+]
 const PLATFORMS_FIELD = ['Twitch', 'Kick', 'YouTube', 'Multi-Platform']
 const PAY_PERIODS = ['stream', 'month', 'year', 'event']
 
@@ -137,6 +144,7 @@ export default function ManageJobsPage() {
               <thead>
                 <tr className="text-[10.5px] font-extrabold text-gray-400 uppercase tracking-wider border-b border-gray-100 bg-gray-50">
                   <th className="text-left px-4 py-3">Title</th>
+                  <th className="text-left px-4 py-3">Category</th>
                   <th className="text-left px-4 py-3">Type</th>
                   <th className="text-left px-4 py-3">Platform</th>
                   <th className="text-left px-4 py-3">Pay</th>
@@ -149,6 +157,7 @@ export default function ManageJobsPage() {
                 {jobs.map((j) => (
                   <tr key={j.id} className="border-b border-gray-50 hover:bg-gray-50">
                     <td className="px-4 py-3 font-bold">{j.title}</td>
+                    <td className="px-4 py-3 text-gray-600">{j.category || '—'}</td>
                     <td className="px-4 py-3 text-gray-600">{j.jobType || '—'}</td>
                     <td className="px-4 py-3 text-gray-600">{j.platform || '—'}</td>
                     <td className="px-4 py-3 text-gray-600">
@@ -205,7 +214,7 @@ export default function ManageJobsPage() {
 function NewJobModal({ company, onClose, onCreated, showToast }) {
   const [form, setForm] = useState({
     title: '', description: '',
-    jobType: '', platform: '',
+    jobType: '', category: '', platform: '',
     payMin: '', payMax: '', payPeriod: 'month',
     requirements: [], reqInput: '',
     isActive: true,
@@ -227,6 +236,7 @@ function NewJobModal({ company, onClose, onCreated, showToast }) {
         title: form.title.trim(),
         description: form.description || null,
         jobType: form.jobType || null,
+        category: form.category || null,
         platform: form.platform || null,
         payMin: form.payMin ? Number(form.payMin) : null,
         payMax: form.payMax ? Number(form.payMax) : null,
@@ -254,6 +264,13 @@ function NewJobModal({ company, onClose, onCreated, showToast }) {
             <input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="e.g. Brand Ambassador — Gaming Peripherals"
               className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent" />
+          </Field>
+          <Field label="Category">
+            <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
+              className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent">
+              <option value="">—</option>
+              {JOB_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Type">
