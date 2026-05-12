@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { BadgeCheck, Building2, Check, ExternalLink, Loader2, Plus, Search, Star, Users, X } from 'lucide-react'
+import { BadgeCheck, Building2, Check, ExternalLink, Loader2, Pencil, Plus, Search, Star, Users, X } from 'lucide-react'
 import { companyApi, reviewApi } from '@/lib/api'
-import { useAppStore } from '@/lib/store'
+import { useAppStore, useAuthStore } from '@/lib/store'
 import StarRating from '@/components/ui/StarRating'
 import ImageUpload from '@/components/ui/ImageUpload'
 import { formatDistanceToNow } from 'date-fns'
@@ -12,6 +12,7 @@ const PARTNERSHIP_TYPES = ['Sponsored Streams', 'Brand Ambassadors', 'Product Re
 
 export default function CompaniesPage() {
   const { showToast } = useAppStore()
+  const { user } = useAuthStore()
   const [companies, setCompanies] = useState([])
   const [filter, setFilter] = useState('All')
   const [selected, setSelected] = useState(null)
@@ -21,10 +22,54 @@ export default function CompaniesPage() {
   const [myReviewContent, setMyReviewContent] = useState('')
   const [submittingReview, setSubmittingReview] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
+  const [showEdit, setShowEdit] = useState(false)
+  const [editForm, setEditForm] = useState(null)
+  const [savingEdit, setSavingEdit] = useState(false)
   const [followed, setFollowed] = useState(new Set())
   const [createForm, setCreateForm] = useState({ name: '', industry: '', website: '', description: '', location: '', logoUrl: '', bannerUrl: '', looking_for: [] })
   const [creating, setCreating] = useState(false)
   const [searchQ, setSearchQ] = useState('')
+
+  const canEditSelected = Boolean(selected && user?.id && selected.ownerId === user.id) || user?.role === 'admin'
+
+  const openEdit = () => {
+    if (!selected) return
+    setEditForm({
+      name: selected.name || '',
+      industry: selected.industry || '',
+      website: selected.website || '',
+      description: selected.description || '',
+      location: selected.location || '',
+      logoUrl: selected.logoUrl || '',
+      bannerUrl: selected.bannerUrl || '',
+      looking_for: selected.lookingFor || [],
+    })
+    setShowEdit(true)
+  }
+
+  const saveEdit = async () => {
+    if (!selected || !editForm) return
+    setSavingEdit(true)
+    try {
+      const updated = await companyApi.update(selected.id, {
+        name: editForm.name.trim() || null,
+        industry: editForm.industry || null,
+        website: editForm.website || null,
+        description: editForm.description || null,
+        location: editForm.location || null,
+        logoUrl: editForm.logoUrl || null,
+        bannerUrl: editForm.bannerUrl || null,
+        lookingFor: editForm.looking_for,
+      })
+      setCompanies((cs) => cs.map((c) => (c.id === updated.id ? { ...c, ...updated } : c)))
+      setSelected((s) => ({ ...s, ...updated }))
+      showToast('Company page updated')
+      setShowEdit(false)
+    } catch (err) {
+      showToast(err.message || 'Could not save', 'error')
+    }
+    setSavingEdit(false)
+  }
 
   const fetchCompanies = async () => {
     try {
@@ -153,13 +198,21 @@ export default function CompaniesPage() {
                       ? <img src={selected.logoUrl} alt="" className="w-full h-full object-cover" />
                       : <Building2 className="w-9 h-9 text-gray-400" strokeWidth={1.75} />}
                   </div>
-                  <button onClick={() => toggleFollow(selected.id, selected.name)}
-                    className={`px-5 py-2 rounded-full font-bold text-[13px] inline-flex items-center gap-1.5 transition
-                      ${followed.has(selected.id) ? 'bg-gray-100 text-gray-500 hover:bg-gray-200' : 'border-2 border-accent text-accent hover:bg-accent hover:text-white'}`}>
-                    {followed.has(selected.id)
-                      ? <><Check className="w-3.5 h-3.5" strokeWidth={3} /> Following</>
-                      : <><Plus className="w-3.5 h-3.5" strokeWidth={3} /> Follow</>}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {canEditSelected && (
+                      <button onClick={openEdit}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 border border-gray-200 rounded-full font-bold text-[13px] hover:border-gray-400 transition">
+                        <Pencil className="w-3.5 h-3.5" strokeWidth={2.5} /> Edit
+                      </button>
+                    )}
+                    <button onClick={() => toggleFollow(selected.id, selected.name)}
+                      className={`px-5 py-2 rounded-full font-bold text-[13px] inline-flex items-center gap-1.5 transition
+                        ${followed.has(selected.id) ? 'bg-gray-100 text-gray-500 hover:bg-gray-200' : 'border-2 border-accent text-accent hover:bg-accent hover:text-white'}`}>
+                      {followed.has(selected.id)
+                        ? <><Check className="w-3.5 h-3.5" strokeWidth={3} /> Following</>
+                        : <><Plus className="w-3.5 h-3.5" strokeWidth={3} /> Follow</>}
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -467,6 +520,98 @@ export default function CompaniesPage() {
                 {creating ? <><Loader2 className="w-4 h-4 animate-spin" strokeWidth={2.5} /> Creating…</> : 'Create Page'}
               </button>
               <button onClick={() => setShowCreate(false)} className="px-5 border border-gray-200 rounded-full text-[13px] font-semibold text-gray-500 hover:border-gray-400 transition">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Company modal */}
+      {showEdit && editForm && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setShowEdit(false)}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-1">
+              <h3 className="text-[17px] font-extrabold">Edit Company Page</h3>
+              <button onClick={() => setShowEdit(false)} aria-label="Close" className="text-gray-400 hover:text-gray-700 transition">
+                <X className="w-5 h-5" strokeWidth={2.5} />
+              </button>
+            </div>
+            <p className="text-[12.5px] text-gray-400 mb-5">{selected?.name}</p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[12px] font-bold text-gray-500 mb-1.5">Logo</label>
+                <ImageUpload
+                  kind="company-logo"
+                  value={editForm.logoUrl}
+                  onChange={(url) => setEditForm({ ...editForm, logoUrl: url })}
+                  label={editForm.logoUrl ? 'Replace logo' : 'Upload logo'}
+                />
+              </div>
+              <div>
+                <label className="block text-[12px] font-bold text-gray-500 mb-1.5">Cover image</label>
+                <ImageUpload
+                  kind="banner"
+                  value={editForm.bannerUrl}
+                  onChange={(url) => setEditForm({ ...editForm, bannerUrl: url })}
+                  label={editForm.bannerUrl ? 'Replace cover' : 'Upload cover'}
+                />
+              </div>
+              <div>
+                <label className="block text-[12px] font-bold text-gray-500 mb-1.5">Company Name</label>
+                <input type="text" value={editForm.name}
+                  onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                  className="w-full h-10 bg-bg border border-gray-200 rounded-xl px-3 text-[13px] outline-none focus:border-accent" />
+              </div>
+              <div>
+                <label className="block text-[12px] font-bold text-gray-500 mb-1.5">Industry</label>
+                <select value={editForm.industry}
+                  onChange={e => setEditForm({ ...editForm, industry: e.target.value })}
+                  className="w-full h-10 bg-bg border border-gray-200 rounded-xl px-3 text-[13px] outline-none focus:border-accent">
+                  <option value="">—</option>
+                  {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[12px] font-bold text-gray-500 mb-1.5">Website</label>
+                  <input type="url" value={editForm.website}
+                    onChange={e => setEditForm({ ...editForm, website: e.target.value })}
+                    className="w-full h-10 bg-bg border border-gray-200 rounded-xl px-3 text-[13px] outline-none focus:border-accent" />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-bold text-gray-500 mb-1.5">Location</label>
+                  <input type="text" value={editForm.location}
+                    onChange={e => setEditForm({ ...editForm, location: e.target.value })}
+                    className="w-full h-10 bg-bg border border-gray-200 rounded-xl px-3 text-[13px] outline-none focus:border-accent" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[12px] font-bold text-gray-500 mb-1.5">Description</label>
+                <textarea rows={3} value={editForm.description}
+                  onChange={e => setEditForm({ ...editForm, description: e.target.value })}
+                  className="w-full bg-bg border border-gray-200 rounded-xl p-3 text-[13px] outline-none focus:border-accent resize-none" />
+              </div>
+              <div>
+                <label className="block text-[12px] font-bold text-gray-500 mb-2">Partnership Types</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {PARTNERSHIP_TYPES.map(pt => (
+                    <button key={pt} type="button"
+                      onClick={() => setEditForm(f => ({ ...f, looking_for: f.looking_for.includes(pt) ? f.looking_for.filter(x => x !== pt) : [...f.looking_for, pt] }))}
+                      className={`py-2 px-3 rounded-xl border text-[11.5px] font-bold text-left transition
+                        ${editForm.looking_for.includes(pt) ? 'border-accent bg-accent-lt text-accent' : 'border-gray-200 text-gray-500 hover:border-gray-400'}`}>
+                      {pt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-5">
+              <button onClick={saveEdit} disabled={savingEdit || !editForm.name.trim()}
+                className="flex-1 h-11 inline-flex items-center justify-center gap-2 bg-accent hover:bg-accent-dk text-white font-bold rounded-full disabled:opacity-50 transition">
+                {savingEdit ? <><Loader2 className="w-4 h-4 animate-spin" strokeWidth={2.5} /> Saving…</> : 'Save Changes'}
+              </button>
+              <button onClick={() => setShowEdit(false)} className="px-5 border border-gray-200 rounded-full text-[13px] font-semibold text-gray-500 hover:border-gray-400 transition">Cancel</button>
             </div>
           </div>
         </div>

@@ -397,6 +397,8 @@ function ProfileSidebar({ profile }) {
   )
 }
 
+const TAGS = ['#FPS', '#JustChatting', '#Valorant', '#Minecraft', '#IRL', '#Music']
+
 function LiveNowSidebar() {
   const { data: live } = useSWR('live-now', () => profileApi.liveNow(8), { refreshInterval: 60_000 })
   return (
