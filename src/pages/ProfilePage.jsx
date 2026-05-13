@@ -1,17 +1,58 @@
-import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
-  BadgeCheck, BarChart3, Check, Clock, Eye, FileText, Handshake, Heart, MapPin,
-  MessageCircle, Pencil, Plus, Radio, Rocket, TrendingUp, Users, X,
+  BadgeCheck, BarChart3, Camera, Check, Clock, Eye, FileText, Handshake, Heart, Loader2, MapPin,
+  MessageCircle, Pencil, Plus, Radio, Rocket, Users, X,
 } from 'lucide-react'
-import { connectionApi, followApi, postApi, profileApi } from '@/lib/api'
+import { connectionApi, followApi, postApi, profileApi, uploadFile } from '@/lib/api'
 import { useAuthStore, useAppStore } from '@/lib/store'
 import { formatDistanceToNow } from 'date-fns'
-import ImageUpload from '@/components/ui/ImageUpload'
-import PlatformPicker from '@/components/ui/PlatformPicker'
-import { COUNTRIES, LANGUAGES } from '@/lib/countries'
 
 const TABS = ['Posts', 'Schedule', 'Stats']
+
+function StreamStatusPill({ profile, setProfile, showToast }) {
+  const [busy, setBusy] = useState(false)
+  const isLive = Boolean(profile.isLive)
+
+  const toggle = async () => {
+    if (busy) return
+    setBusy(true)
+    try {
+      if (isLive) {
+        const updated = await profileApi.setLive(false, null)
+        setProfile((p) => ({ ...(p ?? {}), ...updated }))
+        showToast('Stream ended')
+      } else {
+        const fallback = profile.liveStreamUrl || profile.twitchUrl || profile.kickUrl || profile.youtubeUrl || ''
+        const url = window.prompt('Where are you streaming? Paste your live URL:', fallback)
+        if (!url) return
+        const updated = await profileApi.setLive(true, url.trim())
+        setProfile((p) => ({ ...(p ?? {}), ...updated }))
+        showToast('You are now live')
+      }
+    } catch (err) {
+      showToast(err.message || 'Could not update stream status', 'error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="inline-flex items-center gap-2 mb-2">
+      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border
+        ${isLive ? 'bg-live/10 text-live border-live/30' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>
+        <span className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-live animate-pulse' : 'bg-gray-400'}`} />
+        {isLive ? 'LIVE NOW' : 'Offline'}
+      </div>
+      <button onClick={toggle} disabled={busy}
+        className={`inline-flex items-center gap-1 text-[11.5px] font-bold transition disabled:opacity-50
+          ${isLive ? 'text-gray-500 hover:text-gray-700' : 'text-accent hover:text-accent-dk'}`}>
+        {busy ? <Loader2 className="w-3 h-3 animate-spin" strokeWidth={2.5} /> : <Radio className="w-3 h-3" strokeWidth={2.5} />}
+        {isLive ? 'End stream' : 'Go live'}
+      </button>
+    </div>
+  )
+}
 
 const SCHEDULE = [
   { day: 'Monday',    time: '8:00 PM', game: 'Valorant Ranked',      duration: '4h', platform: 'twitch' },
@@ -24,21 +65,41 @@ const PLATFORM_DOT = { twitch: 'bg-purple-500', kick: 'bg-green-500', youtube: '
 
 export default function ProfilePage() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const { profile: myProfile, fetchProfile } = useAuthStore()
   const { showToast } = useAppStore()
   const [profile, setProfile] = useState(null)
   const [posts, setPosts] = useState([])
   const [tab, setTab] = useState('Posts')
   const [loading, setLoading] = useState(true)
-  const [showEdit, setShowEdit] = useState(false)
-  const [editForm, setEditForm] = useState({})
-  const [saving, setSaving] = useState(false)
   const [isFollowing, setIsFollowing] = useState(false)
   const [isConnected, setIsConnected] = useState(false)
   const [showConnections, setShowConnections] = useState(false)
   const [connectionsList, setConnectionsList] = useState(null)
+  const [uploadingBanner, setUploadingBanner] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const bannerInputRef = useRef(null)
+  const avatarInputRef = useRef(null)
 
   const isOwnProfile = !id || id === myProfile?.id
+
+  const handleImageChange = async (kind, file) => {
+    if (!file) return
+    const setUploading = kind === 'banner' ? setUploadingBanner : setUploadingAvatar
+    const field = kind === 'banner' ? 'bannerUrl' : 'avatarUrl'
+    setUploading(true)
+    try {
+      const url = await uploadFile({ file, kind })
+      const updated = await profileApi.updateMe({ [field]: url })
+      setProfile((p) => ({ ...(p ?? {}), ...updated }))
+      await fetchProfile()
+      showToast(kind === 'banner' ? 'Cover updated' : 'Profile photo updated')
+    } catch (err) {
+      showToast(err.message || 'Upload failed', 'error')
+    } finally {
+      setUploading(false)
+    }
+  }
 
   useEffect(() => {
     const targetId = id || myProfile?.id
@@ -55,26 +116,6 @@ export default function ProfilePage() {
         const p = isOwnProfile ? await profileApi.me() : await profileApi.get(targetId)
         if (cancelled) return
         setProfile(p)
-        setEditForm({
-          displayName: p?.displayName || '',
-          handle: p?.handle || '',
-          firstName: p?.firstName || '',
-          lastName: p?.lastName || '',
-          country: p?.country || '',
-          language: p?.language || 'en',
-          bio: p?.bio || '',
-          category: p?.category || '',
-          location: p?.location || '',
-          website: p?.website || '',
-          twitchUrl: p?.twitchUrl || '',
-          kickUrl: p?.kickUrl || '',
-          youtubeUrl: p?.youtubeUrl || '',
-          platforms: p?.platforms || [],
-          contentCategories: p?.contentCategories || [],
-          avatarUrl: p?.avatarUrl || '',
-          bannerUrl: p?.bannerUrl || '',
-          liveStreamUrl: p?.liveStreamUrl || '',
-        })
         setIsFollowing(Boolean(p?.isFollowing))
         setIsConnected(p?.connectionStatus === 'accepted')
 
@@ -95,26 +136,6 @@ export default function ProfilePage() {
     load()
     return () => { cancelled = true }
   }, [id, myProfile?.id, isOwnProfile])
-
-  const saveProfile = async () => {
-    setSaving(true)
-    try {
-      // Trim empty strings to null so blanks actually clear values
-      const patch = Object.fromEntries(
-        Object.entries(editForm).map(([k, v]) => [k, v === '' ? null : v])
-      )
-      const updated = await profileApi.updateMe(patch)
-      showToast('Profile updated')
-      setShowEdit(false)
-      await fetchProfile()
-      setProfile(updated)
-    } catch (err) {
-      if (err.code === 'HANDLE_TAKEN') showToast('That handle is already taken', 'error')
-      else showToast(err.message || 'Could not save', 'error')
-    } finally {
-      setSaving(false)
-    }
-  }
 
   const handleFollow = async () => {
     if (!myProfile) return
@@ -183,42 +204,64 @@ export default function ProfilePage() {
 
       {/* Profile card */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-4">
-        <div className="relative h-44 bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200">
+        {/* Banner with hover overlay (own profile only) */}
+        <div className="relative h-44 bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200 group/banner">
           {profile.bannerUrl && (
             <img src={profile.bannerUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          )}
+          {isOwnProfile && (
+            <>
+              <button
+                type="button"
+                onClick={() => bannerInputRef.current?.click()}
+                disabled={uploadingBanner}
+                className="absolute top-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/55 hover:bg-black/75 text-white text-[12px] font-bold rounded-full backdrop-blur-sm transition opacity-0 group-hover/banner:opacity-100 disabled:opacity-100 disabled:cursor-wait">
+                {uploadingBanner
+                  ? <><Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={2.5} /> Uploading…</>
+                  : <><Camera className="w-3.5 h-3.5" strokeWidth={2.5} /> {profile.bannerUrl ? 'Change cover' : 'Add cover'}</>}
+              </button>
+              <input ref={bannerInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageChange('banner', f); e.target.value = '' }} />
+            </>
           )}
         </div>
         <div className="px-6 pb-5">
           <div className="flex items-end justify-between -mt-10 mb-4">
-            <div className="relative">
+            <div className="relative group/avatar">
               <div className="w-20 h-20 rounded-full border-4 border-white shadow-md overflow-hidden bg-gradient-to-br from-accent to-purple-400 flex items-center justify-center text-white font-extrabold text-2xl">
                 {profile.avatarUrl
                   ? <img src={profile.avatarUrl} alt="" className="w-full h-full object-cover" />
                   : initials}
               </div>
+              {isOwnProfile && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={uploadingAvatar}
+                    aria-label={profile.avatarUrl ? 'Change profile photo' : 'Add profile photo'}
+                    className="absolute inset-0 rounded-full bg-black/55 backdrop-blur-[2px] flex items-center justify-center text-white opacity-0 group-hover/avatar:opacity-100 transition disabled:opacity-100 disabled:cursor-wait">
+                    {uploadingAvatar
+                      ? <Loader2 className="w-5 h-5 animate-spin" strokeWidth={2.5} />
+                      : <Camera className="w-5 h-5" strokeWidth={2.25} />}
+                  </button>
+                  <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageChange('avatar', f); e.target.value = '' }} />
+                </>
+              )}
               {profile.isLive && (
                 <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-live text-white text-[9.5px] font-black px-2 py-0.5 rounded-full border-2 border-white">LIVE</div>
               )}
             </div>
-            <div className="flex gap-2 pb-1">
+            <div className="flex items-center gap-2 pb-1">
               {isOwnProfile ? (
-                <>
-                  <button onClick={() => setShowEdit(true)} className="inline-flex items-center gap-1.5 px-4 py-2 border border-gray-200 rounded-full text-[13px] font-bold hover:border-gray-400 transition">
-                    <Pencil className="w-3.5 h-3.5" strokeWidth={2.5} /> Edit Profile
-                  </button>
-                  <button onClick={async () => {
-                    if (profile.isLive) {
-                      try { const updated = await profileApi.setLive(false, null); setProfile(updated); showToast('Marked as offline') } catch (err) { showToast(err.message || 'Failed', 'error') }
-                      return
-                    }
-                    const url = window.prompt('Paste your live stream URL (Twitch/Kick/YouTube/etc.):', profile.liveStreamUrl || profile.twitchUrl || profile.kickUrl || profile.youtubeUrl || '')
-                    if (!url) return
-                    try { const updated = await profileApi.setLive(true, url.trim()); setProfile(updated); showToast('You are now live') } catch (err) { showToast(err.message || 'Failed to go live', 'error') }
-                  }} className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-bold transition ${profile.isLive ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' : 'bg-live text-white hover:opacity-90'}`}>
-                    <Radio className="w-3.5 h-3.5" strokeWidth={2.5} />
-                    {profile.isLive ? 'End Stream' : 'Go Live'}
-                  </button>
-                </>
+                <button onClick={() => navigate('/settings')}
+                  aria-label="Edit profile"
+                  className="inline-flex items-center gap-1.5 h-9 px-3.5 border border-gray-200 rounded-full text-[12.5px] font-bold text-gray-600 hover:border-gray-400 hover:text-gray-900 transition">
+                  <Pencil className="w-3.5 h-3.5" strokeWidth={2.5} /> Edit profile
+                </button>
               ) : (
                 <>
                   <button onClick={handleFollow} className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-bold transition ${isFollowing ? 'bg-gray-100 text-gray-500 hover:bg-gray-200' : 'border border-accent text-accent hover:bg-accent hover:text-white'}`}>
@@ -235,6 +278,9 @@ export default function ProfilePage() {
               )}
             </div>
           </div>
+
+          {/* Streaming status (own profile, near the name) */}
+          {isOwnProfile && <StreamStatusPill profile={profile} setProfile={setProfile} showToast={showToast} />}
 
           <h1 className="text-[20px] font-extrabold">{profile.displayName}</h1>
           <div className="flex items-center flex-wrap gap-x-1.5 text-[13px] text-gray-400 mb-2">
@@ -433,136 +479,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Edit Profile modal */}
-      {showEdit && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setShowEdit(false)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-5">
-              <h3 className="text-[17px] font-extrabold">Edit Profile</h3>
-              <button onClick={() => setShowEdit(false)} aria-label="Close" className="text-gray-400 hover:text-gray-700 transition">
-                <X className="w-5 h-5" strokeWidth={2.5} />
-              </button>
-            </div>
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-[11.5px] font-bold text-gray-500 mb-1">First name</label>
-                  <input type="text" placeholder="Jordan"
-                    className="w-full h-9 bg-bg border border-gray-200 rounded-lg px-3 text-[13px] outline-none focus:border-accent"
-                    value={editForm.firstName || ''} onChange={e => setEditForm({ ...editForm, firstName: e.target.value })} />
-                </div>
-                <div>
-                  <label className="block text-[11.5px] font-bold text-gray-500 mb-1">Last name</label>
-                  <input type="text" placeholder="Rivera"
-                    className="w-full h-9 bg-bg border border-gray-200 rounded-lg px-3 text-[13px] outline-none focus:border-accent"
-                    value={editForm.lastName || ''} onChange={e => setEditForm({ ...editForm, lastName: e.target.value })} />
-                </div>
-              </div>
-              {[
-                { key: 'displayName', label: 'Display Name', placeholder: 'Your name' },
-                { key: 'handle', label: 'Handle', placeholder: 'yourhandle' },
-                { key: 'category', label: 'Category', placeholder: 'e.g. FPS, Just Chatting' },
-                { key: 'location', label: 'Location', placeholder: 'City' },
-                { key: 'website', label: 'Website', placeholder: 'https://yoursite.com' },
-                { key: 'twitchUrl', label: 'Twitch URL', placeholder: 'https://twitch.tv/you' },
-                { key: 'kickUrl', label: 'Kick URL', placeholder: 'https://kick.com/you' },
-                { key: 'youtubeUrl', label: 'YouTube URL', placeholder: 'https://youtube.com/@you' },
-                { key: 'liveStreamUrl', label: 'Live stream URL (used by Go Live button)', placeholder: 'https://twitch.tv/you' },
-              ].map(field => (
-                <div key={field.key}>
-                  <label className="block text-[11.5px] font-bold text-gray-500 mb-1">{field.label}</label>
-                  <input type="text" placeholder={field.placeholder}
-                    className="w-full h-9 bg-bg border border-gray-200 rounded-lg px-3 text-[13px] outline-none focus:border-accent"
-                    value={editForm[field.key] || ''} onChange={e => setEditForm({ ...editForm, [field.key]: e.target.value })} />
-                </div>
-              ))}
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-[11.5px] font-bold text-gray-500 mb-1">Country</label>
-                  <select
-                    className="w-full h-9 bg-bg border border-gray-200 rounded-lg px-2 text-[13px] outline-none focus:border-accent"
-                    value={editForm.country || ''}
-                    onChange={e => setEditForm({ ...editForm, country: e.target.value || null })}
-                  >
-                    <option value="">—</option>
-                    {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11.5px] font-bold text-gray-500 mb-1">Language</label>
-                  <select
-                    className="w-full h-9 bg-bg border border-gray-200 rounded-lg px-2 text-[13px] outline-none focus:border-accent"
-                    value={editForm.language || 'en'}
-                    onChange={e => setEditForm({ ...editForm, language: e.target.value })}
-                  >
-                    {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="block text-[11.5px] font-bold text-gray-500 mb-1.5">Streaming Platforms</label>
-                <PlatformPicker
-                  value={editForm.platforms || []}
-                  onChange={(slugs) => setEditForm({ ...editForm, platforms: slugs })}
-                />
-              </div>
-              {(profile?.contentCategories?.length > 0 || editForm.contentCategories?.length > 0) && (
-                <div>
-                  <label className="block text-[11.5px] font-bold text-gray-500 mb-1.5">Content niches</label>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {['Fashion & Style','Beauty','Fitness & Wellness','Lifestyle','Travel','Food & Drinks','Tech & AI','Finance & Business','Entertainment','Gaming','Education / Niche Knowledge','Dating & Relationships','Adult Content'].map((cat) => {
-                      const active = (editForm.contentCategories || []).includes(cat)
-                      return (
-                        <button key={cat} type="button"
-                          onClick={() => setEditForm((f) => ({
-                            ...f,
-                            contentCategories: active
-                              ? f.contentCategories.filter((c) => c !== cat)
-                              : [...(f.contentCategories || []), cat]
-                          }))}
-                          className={`text-left py-1.5 px-2.5 rounded-lg border text-[11px] font-bold transition
-                            ${active ? 'border-pink-500 bg-pink-50 text-pink-700' : 'border-gray-200 text-gray-500 hover:border-gray-400'}`}>
-                          {cat}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-              <div>
-                <label className="block text-[11.5px] font-bold text-gray-500 mb-1">Bio</label>
-                <textarea rows={3} placeholder="Tell your story…"
-                  className="w-full bg-bg border border-gray-200 rounded-lg p-2.5 text-[13px] outline-none focus:border-accent resize-none"
-                  value={editForm.bio || ''} onChange={e => setEditForm({ ...editForm, bio: e.target.value })} />
-              </div>
-              <div>
-                <label className="block text-[11.5px] font-bold text-gray-500 mb-1.5">Avatar</label>
-                <ImageUpload
-                  kind="avatar"
-                  value={editForm.avatarUrl || ''}
-                  onChange={(url) => setEditForm({ ...editForm, avatarUrl: url })}
-                  label="Upload avatar"
-                />
-              </div>
-              <div>
-                <label className="block text-[11.5px] font-bold text-gray-500 mb-1.5">Banner</label>
-                <ImageUpload
-                  kind="banner"
-                  value={editForm.bannerUrl || ''}
-                  onChange={(url) => setEditForm({ ...editForm, bannerUrl: url })}
-                  label="Upload banner"
-                />
-              </div>
-            </div>
-            <div className="flex gap-3 mt-5">
-              <button onClick={saveProfile} disabled={saving} className="flex-1 h-10 bg-accent hover:bg-accent-dk text-white font-bold rounded-full disabled:opacity-50 transition">
-                {saving ? 'Saving…' : 'Save Changes'}
-              </button>
-              <button onClick={() => setShowEdit(false)} className="px-5 border border-gray-200 rounded-full text-[13px] font-semibold text-gray-500 hover:border-gray-400 transition">Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

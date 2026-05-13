@@ -1,8 +1,17 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Key, Mail, Settings as SettingsIcon, Trash2, User } from 'lucide-react'
+import { Key, Loader2, Mail, Settings as SettingsIcon, Trash2, User } from 'lucide-react'
 import { authApi, profileApi } from '@/lib/api'
 import { useAppStore, useAuthStore } from '@/lib/store'
+import ImageUpload from '@/components/ui/ImageUpload'
+import PlatformPicker from '@/components/ui/PlatformPicker'
+import { COUNTRIES, LANGUAGES } from '@/lib/countries'
+
+const INFLUENCER_CATEGORIES = [
+  'Fashion & Style', 'Beauty', 'Fitness & Wellness', 'Lifestyle', 'Travel',
+  'Food & Drinks', 'Tech & AI', 'Finance & Business', 'Entertainment', 'Gaming',
+  'Education / Niche Knowledge', 'Dating & Relationships', 'Adult Content',
+]
 
 const TABS = [
   { id: 'profile',  label: 'Profile',  Icon: User },
@@ -41,59 +50,195 @@ export default function SettingsPage() {
   )
 }
 
-// ── Profile tab (quick-edit key fields; full editor in ProfilePage modal) ──
+// ── Profile tab — full editor (banner, avatar, all profile fields) ──
 function ProfileTab({ profile, showToast, refresh }) {
   const [form, setForm] = useState({
     displayName: profile?.displayName || '',
+    handle: profile?.handle || '',
+    firstName: profile?.firstName || '',
+    lastName: profile?.lastName || '',
     bio: profile?.bio || '',
     category: profile?.category || '',
+    country: profile?.country || '',
+    language: profile?.language || 'en',
     location: profile?.location || '',
+    website: profile?.website || '',
+    twitchUrl: profile?.twitchUrl || '',
+    kickUrl: profile?.kickUrl || '',
+    youtubeUrl: profile?.youtubeUrl || '',
+    liveStreamUrl: profile?.liveStreamUrl || '',
+    platforms: profile?.platforms || [],
+    contentCategories: profile?.contentCategories || [],
+    avatarUrl: profile?.avatarUrl || '',
+    bannerUrl: profile?.bannerUrl || '',
   })
   const [saving, setSaving] = useState(false)
 
   const save = async () => {
     setSaving(true)
     try {
-      await profileApi.updateMe({
-        displayName: form.displayName || undefined,
-        bio: form.bio || null,
-        category: form.category || null,
-        location: form.location || null,
-      })
+      const patch = Object.fromEntries(
+        Object.entries(form).map(([k, v]) => [k, v === '' ? null : v])
+      )
+      await profileApi.updateMe(patch)
       showToast('Profile updated')
       await refresh()
     } catch (err) {
-      showToast(err.message || 'Failed', 'error')
+      if (err.code === 'HANDLE_TAKEN') showToast('That handle is already taken', 'error')
+      else showToast(err.message || 'Failed', 'error')
     }
     setSaving(false)
   }
 
+  const toggleNiche = (cat) => {
+    setForm((f) => ({
+      ...f,
+      contentCategories: f.contentCategories.includes(cat)
+        ? f.contentCategories.filter((c) => c !== cat)
+        : [...f.contentCategories, cat],
+    }))
+  }
+
   return (
-    <Card title="Profile" hint="For platforms, avatar and banner use the full profile editor.">
-      <Field label="Display name">
-        <input type="text" value={form.displayName}
-          onChange={(e) => setForm({ ...form, displayName: e.target.value })}
-          className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent" />
-      </Field>
-      <Field label="Bio">
-        <textarea rows={3} value={form.bio}
-          onChange={(e) => setForm({ ...form, bio: e.target.value })}
-          className="w-full bg-bg border border-gray-200 rounded-lg p-2.5 text-sm outline-none focus:border-accent resize-none" />
-      </Field>
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Category">
-          <input type="text" value={form.category}
-            onChange={(e) => setForm({ ...form, category: e.target.value })}
+    <div className="space-y-4">
+      <Card title="Photos" hint="Your cover and profile photo show up on every page you appear on.">
+        <Field label="Profile photo">
+          <ImageUpload kind="avatar" value={form.avatarUrl}
+            onChange={(url) => setForm({ ...form, avatarUrl: url })}
+            label={form.avatarUrl ? 'Replace photo' : 'Upload photo'} />
+        </Field>
+        <Field label="Cover image">
+          <ImageUpload kind="banner" value={form.bannerUrl}
+            onChange={(url) => setForm({ ...form, bannerUrl: url })}
+            label={form.bannerUrl ? 'Replace cover' : 'Upload cover'} />
+        </Field>
+      </Card>
+
+      <Card title="Basics">
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="First name">
+            <input type="text" value={form.firstName}
+              onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+              className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent" />
+          </Field>
+          <Field label="Last name">
+            <input type="text" value={form.lastName}
+              onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+              className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent" />
+          </Field>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Display name">
+            <input type="text" value={form.displayName}
+              onChange={(e) => setForm({ ...form, displayName: e.target.value })}
+              className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent" />
+          </Field>
+          <Field label="Handle">
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">@</span>
+              <input type="text" value={form.handle}
+                onChange={(e) => setForm({ ...form, handle: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') })}
+                className="w-full h-10 bg-bg border border-gray-200 rounded-lg pl-7 pr-3 text-sm outline-none focus:border-accent" />
+            </div>
+          </Field>
+        </div>
+        <Field label="Bio">
+          <textarea rows={3} value={form.bio}
+            onChange={(e) => setForm({ ...form, bio: e.target.value })}
+            className="w-full bg-bg border border-gray-200 rounded-lg p-2.5 text-sm outline-none focus:border-accent resize-none" />
+        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Category">
+            <input type="text" value={form.category}
+              onChange={(e) => setForm({ ...form, category: e.target.value })}
+              placeholder="e.g. FPS, Just Chatting"
+              className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent" />
+          </Field>
+          <Field label="Location">
+            <input type="text" value={form.location}
+              onChange={(e) => setForm({ ...form, location: e.target.value })}
+              className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent" />
+          </Field>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Country">
+            <select value={form.country}
+              onChange={(e) => setForm({ ...form, country: e.target.value })}
+              className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent">
+              <option value="">—</option>
+              {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
+            </select>
+          </Field>
+          <Field label="Language">
+            <select value={form.language}
+              onChange={(e) => setForm({ ...form, language: e.target.value })}
+              className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent">
+              {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
+            </select>
+          </Field>
+        </div>
+      </Card>
+
+      <Card title="Links">
+        <Field label="Website">
+          <input type="url" value={form.website}
+            onChange={(e) => setForm({ ...form, website: e.target.value })}
+            placeholder="https://yoursite.com"
             className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent" />
         </Field>
-        <Field label="Location">
-          <input type="text" value={form.location}
-            onChange={(e) => setForm({ ...form, location: e.target.value })}
+        <Field label="Twitch URL">
+          <input type="url" value={form.twitchUrl}
+            onChange={(e) => setForm({ ...form, twitchUrl: e.target.value })}
+            placeholder="https://twitch.tv/you"
             className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent" />
         </Field>
+        <Field label="Kick URL">
+          <input type="url" value={form.kickUrl}
+            onChange={(e) => setForm({ ...form, kickUrl: e.target.value })}
+            placeholder="https://kick.com/you"
+            className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent" />
+        </Field>
+        <Field label="YouTube URL">
+          <input type="url" value={form.youtubeUrl}
+            onChange={(e) => setForm({ ...form, youtubeUrl: e.target.value })}
+            placeholder="https://youtube.com/@you"
+            className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent" />
+        </Field>
+        <Field label="Live stream URL (used by Go Live button)">
+          <input type="url" value={form.liveStreamUrl}
+            onChange={(e) => setForm({ ...form, liveStreamUrl: e.target.value })}
+            placeholder="https://twitch.tv/you"
+            className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent" />
+        </Field>
+      </Card>
+
+      <Card title="Streaming platforms" hint="Picked from the 84-platform catalog. Shows on your profile and feed.">
+        <PlatformPicker value={form.platforms}
+          onChange={(slugs) => setForm({ ...form, platforms: slugs })} />
+      </Card>
+
+      <Card title="Content niches" hint="Optional — useful for influencers and brand matching.">
+        <div className="grid grid-cols-2 gap-1.5">
+          {INFLUENCER_CATEGORIES.map((cat) => {
+            const active = form.contentCategories.includes(cat)
+            return (
+              <button key={cat} type="button" onClick={() => toggleNiche(cat)}
+                className={`text-left py-1.5 px-2.5 rounded-lg border text-[11px] font-bold transition
+                  ${active ? 'border-pink-500 bg-pink-50 text-pink-700' : 'border-gray-200 text-gray-500 hover:border-gray-400'}`}>
+                {cat}
+              </button>
+            )
+          })}
+        </div>
+      </Card>
+
+      <div className="sticky bottom-3 flex justify-end">
+        <button onClick={save} disabled={saving}
+          className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-gray-900 hover:bg-black text-white text-[13px] font-bold rounded-full shadow-lg transition disabled:opacity-50">
+          {saving ? <><Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={2.5} /> Saving…</> : 'Save changes'}
+        </button>
       </div>
-      <PrimaryButton onClick={save} loading={saving}>Save changes</PrimaryButton>
-    </Card>
+    </div>
   )
 }
 
