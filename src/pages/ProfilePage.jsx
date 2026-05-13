@@ -43,10 +43,9 @@ export default function ProfilePage() {
   useEffect(() => {
     const targetId = id || myProfile?.id
     if (!targetId) {
-      // Keep "loading" true while auth is still bootstrapping; once we know
-      // we have neither an :id param nor a logged-in profile, we have nothing
-      // to load — bail out of the spinner so the user sees an empty state.
-      if (!id && myProfile === null) setLoading(false)
+      // No :id in the URL AND no usable id from the logged-in profile — stop
+      // the spinner so we don't hang on a partially-loaded session.
+      if (!id && !myProfile?.id) setLoading(false)
       return
     }
     let cancelled = false
