@@ -7,6 +7,12 @@ import {
 import { connectionApi, followApi, postApi, profileApi, uploadFile } from '@/lib/api'
 import { useAuthStore, useAppStore } from '@/lib/store'
 import { formatDistanceToNow } from 'date-fns'
+import ImageCropModal from '@/components/ui/ImageCropModal'
+
+const CROP_SPEC = {
+  avatar: { aspect: 1, outputSize: { width: 512, height: 512 }, title: 'Adjust your profile photo' },
+  banner: { aspect: 3, outputSize: { width: 1500, height: 500 }, title: 'Adjust your cover photo' },
+}
 
 const TABS = ['Posts', 'Schedule', 'Stats']
 
@@ -78,22 +84,27 @@ export default function ProfilePage() {
   const [connectionsList, setConnectionsList] = useState(null)
   const [uploadingBanner, setUploadingBanner] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [cropTarget, setCropTarget] = useState(null) // { kind: 'avatar'|'banner', file }
   const bannerInputRef = useRef(null)
   const avatarInputRef = useRef(null)
 
   const isOwnProfile = !id || id === myProfile?.id
 
-  const handleImageChange = async (kind, file) => {
-    if (!file) return
+  const handleCroppedUpload = async (blob) => {
+    if (!cropTarget) return
+    const { kind } = cropTarget
     const setUploading = kind === 'banner' ? setUploadingBanner : setUploadingAvatar
     const field = kind === 'banner' ? 'bannerUrl' : 'avatarUrl'
     setUploading(true)
     try {
-      const url = await uploadFile({ file, kind })
+      const ext = blob.type === 'image/png' ? 'png' : 'jpg'
+      const named = new File([blob], `${kind}-${Date.now()}.${ext}`, { type: blob.type })
+      const url = await uploadFile({ file: named, kind })
       const updated = await profileApi.updateMe({ [field]: url })
       setProfile((p) => ({ ...(p ?? {}), ...updated }))
       await fetchProfile()
       showToast(kind === 'banner' ? 'Cover updated' : 'Profile photo updated')
+      setCropTarget(null)
     } catch (err) {
       showToast(err.message || 'Upload failed', 'error')
     } finally {
@@ -222,7 +233,7 @@ export default function ProfilePage() {
               </button>
               <input ref={bannerInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif"
                 className="hidden"
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageChange('banner', f); e.target.value = '' }} />
+                onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) setCropTarget({ kind: 'banner', file: f }) }} />
             </>
           )}
         </div>
@@ -248,7 +259,7 @@ export default function ProfilePage() {
                   </button>
                   <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif"
                     className="hidden"
-                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageChange('avatar', f); e.target.value = '' }} />
+                    onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) setCropTarget({ kind: 'avatar', file: f }) }} />
                 </>
               )}
               {profile.isLive && (
@@ -439,6 +450,18 @@ export default function ProfilePage() {
           )}
         </div>
       </div>
+
+      {/* Crop modal for banner/avatar uploads */}
+      {cropTarget && (
+        <ImageCropModal
+          file={cropTarget.file}
+          aspect={CROP_SPEC[cropTarget.kind].aspect}
+          outputSize={CROP_SPEC[cropTarget.kind].outputSize}
+          title={CROP_SPEC[cropTarget.kind].title}
+          onCancel={() => setCropTarget(null)}
+          onConfirm={handleCroppedUpload}
+        />
+      )}
 
       {/* Connections modal */}
       {showConnections && (
