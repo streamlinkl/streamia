@@ -33,13 +33,16 @@ export class ApiError extends Error {
 let refreshInFlight = null
 
 async function doRefresh() {
+  // Two acceptable sources for the refresh token: localStorage (legacy Bearer
+  // clients) or the `sl_refresh` httpOnly cookie sent automatically. If we have
+  // neither, the request will still try the cookie path and bubble up 401.
   const refreshToken = tokens.getRefresh()
-  if (!refreshToken) throw new ApiError(401, 'NO_REFRESH', 'No refresh token')
 
   const res = await fetch(`${API_URL}/api/auth/refresh`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken }),
+    credentials: 'include',
+    body: JSON.stringify(refreshToken ? { refreshToken } : {}),
   })
   if (!res.ok) {
     tokens.clear()
@@ -78,6 +81,10 @@ async function request(method, path, { body, query, auth = true, retry = true } 
   const res = await fetch(url, {
     method,
     headers,
+    // Include the httpOnly auth cookies on every same-site request to api.streamia.co.
+    // Server sets `sl_access` / `sl_refresh`; we still send the Bearer header above for
+    // backward compat until all clients are cookie-only.
+    credentials: 'include',
     body: body === undefined ? undefined : JSON.stringify(body),
   })
 
