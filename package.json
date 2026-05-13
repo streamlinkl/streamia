@@ -5,7 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:vite": "vite",
+    "dev:next": "next dev -p 3100",
     "build": "vite build",
+    "build:vite": "vite build",
+    "build:next": "next build",
+    "start:next": "next start -p 3100",
     "preview": "vite preview",
     "lint": "eslint src --ext .js,.jsx"
   },
@@ -14,6 +19,7 @@
     "i18next": "^26.0.8",
     "i18next-browser-languagedetector": "^8.2.1",
     "lucide-react": "^1.9.0",
+    "next": "^14.2.35",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-easy-crop": "^5.5.7",
