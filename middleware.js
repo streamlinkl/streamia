@@ -16,11 +16,14 @@ export function middleware(req) {
   const access = req.cookies.get('sl_access')?.value
   if (access) return NextResponse.next()
 
-  const url = req.nextUrl.clone()
-  const dest = url.pathname + (url.search || '')
-  url.pathname = '/login'
-  url.search = `?next=${encodeURIComponent(dest)}`
-  return NextResponse.redirect(url)
+  // Build the redirect against the original public host the browser actually
+  // hit (test.streamia.co), not the internal Caddy → Next hop (localhost:3100).
+  const fwdHost = req.headers.get('x-forwarded-host')
+  const fwdProto = req.headers.get('x-forwarded-proto') || 'https'
+  const baseHost = fwdHost || req.nextUrl.host
+  const dest = req.nextUrl.pathname + (req.nextUrl.search || '')
+  const target = new URL(`/login?next=${encodeURIComponent(dest)}`, `${fwdProto}://${baseHost}`)
+  return NextResponse.redirect(target)
 }
 
 export const config = {

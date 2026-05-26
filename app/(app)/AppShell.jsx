@@ -1,11 +1,12 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   BarChart3, Bell, Briefcase, Building2, Crown, Gem, Home, LogOut,
   MessageSquare, Search, Settings, ShieldCheck, Star, Trophy, User, Users, Zap,
 } from 'lucide-react'
+import { useAuthStore } from '@/lib/store'
 
 const NAV = [
   { href: '/feed',        Icon: Home,          label: 'Home' },
@@ -25,6 +26,12 @@ export default function AppShell({ me, children }) {
   const router = useRouter()
   const pathname = usePathname()
   const [showMenu, setShowMenu] = useState(false)
+  const hydrate = useAuthStore((s) => s.hydrate)
+
+  // Push the SSR-fetched user into the client-side Zustand store so
+  // every page below doesn't have to re-fetch /auth/me.
+  useEffect(() => { hydrate(me) }, [hydrate, me])
+
   const profile = me?.profile
   const initials = (profile?.displayName || me?.email || '??').slice(0, 2).toUpperCase()
   const isAdmin = me?.role === 'admin'
