@@ -1,4 +1,4 @@
-import Component from '@/components/auth/Login'
+import Component from '@/components/settings/Settings'
 
 export const dynamic = 'force-dynamic'
 

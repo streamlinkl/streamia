@@ -1,4 +1,4 @@
-import Component from '@/components/auth/Login'
+import Component from '@/components/jobs/Jobs'
 
 export const dynamic = 'force-dynamic'
 

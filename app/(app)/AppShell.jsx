@@ -7,6 +7,8 @@ import {
   MessageSquare, Search, Settings, ShieldCheck, Star, Trophy, User, Users, Zap,
 } from 'lucide-react'
 import { useAuthStore } from '@/lib/store'
+import Toast from '@/components/Toast'
+import NotificationBell from '@/components/NotificationBell'
 
 const NAV = [
   { href: '/feed',        Icon: Home,          label: 'Home' },
@@ -80,10 +82,9 @@ export default function AppShell({ me, children }) {
             )
           })}
 
-          {/* Bell placeholder — full NotificationBell ports in Faz 5 with real-time SWR */}
-          <Link href="/notifications" className="ml-1 w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition">
-            <Bell className="w-[18px] h-[18px]" strokeWidth={2} />
-          </Link>
+          <div className="ml-1">
+            <NotificationBell />
+          </div>
 
           {/* Profile pill + dropdown */}
           <div className="relative ml-1">
@@ -128,6 +129,7 @@ export default function AppShell({ me, children }) {
       </nav>
 
       <main>{children}</main>
+      <Toast />
     </>
   )
 }
