@@ -1,8 +1,13 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { Upload, Loader2, ImagePlus } from 'lucide-react'
 import { uploadApi, uploadFile } from '@/lib/api-client'
-import ImageCropModal from '@/components/ImageCropModal'
+
+// The crop modal pulls in react-easy-crop (~30 kB gzip). Loaded only when
+// the user actually picks a file — keeps every page that mounts ImageUpload
+// (Settings, Companies, Profile editor) lighter on first paint.
+const ImageCropModal = dynamic(() => import('@/components/ImageCropModal'), { ssr: false })
 
 // Per-kind crop spec. Aspect = w/h. outputSize is the final pixel size we render to.
 const CROP_SPEC = {

@@ -3,8 +3,10 @@ import { notFound } from 'next/navigation'
 import { ArrowRight, BadgeCheck, Eye, MapPin, Users, Zap } from 'lucide-react'
 import { apiServer } from '@/lib/api-server'
 
-// 5-minute ISR — public profiles are read-heavy and rarely change.
-export const revalidate = 300
+// 2-minute ISR — public profiles are read-heavy; this keeps avatar/banner
+// edits visible within a couple of minutes while still serving from the
+// edge cache.
+export const revalidate = 120
 
 async function loadProfile(handle) {
   try {

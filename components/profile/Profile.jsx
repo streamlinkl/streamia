@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import {
   BadgeCheck, BarChart3, Camera, Check, Clock, Eye, FileText, Handshake, Heart,
@@ -9,7 +10,8 @@ import {
 import { connectionApi, followApi, postApi, profileApi, uploadFile } from '@/lib/api-client'
 import { useAuthStore, useAppStore } from '@/lib/store'
 import { formatDistanceToNow } from 'date-fns'
-import ImageCropModal from '@/components/ImageCropModal'
+
+const ImageCropModal = dynamic(() => import('@/components/ImageCropModal'), { ssr: false })
 
 const CROP_SPEC = {
   avatar: { aspect: 1, outputSize: { width: 512, height: 512 }, title: 'Adjust your profile photo' },
