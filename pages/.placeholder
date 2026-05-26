@@ -1,6 +1,0 @@
-# This empty `pages/` directory exists so Next.js does NOT mistake Vite's
-# `src/pages/` for the Pages Router during migration. Next.js's auto-detector
-# prefers a top-level `pages/`; finding it empty, it falls through to App Router
-# (`app/`) only.
-#
-# Once the Vite pages are deleted (Faz 6), this whole directory can go too.

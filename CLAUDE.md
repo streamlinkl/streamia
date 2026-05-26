@@ -52,15 +52,24 @@ non-trivial. For small tweaks one role's voice is enough.
 
 ## Project facts (for fast onboarding)
 
-- **Domains:** `streamia.co` (root), `test.streamia.co` (Vite + Next.js app),
+- **Domains:** `streamia.co` (root), `test.streamia.co` (Next.js app),
   `api.streamia.co` (Express backend), `storage.streamia.co` (MinIO).
 - **VPS:** `2.24.220.107` — Caddy + pm2 + Postgres 16 + MinIO + Express + Next.js standalone.
-- **Repos:** `streamia` (frontend, branches `main`, `dev`, `next-faz-0`) and
-  `streamia_api` (backend, branches `main`, `next-faz-1`).
-- **Migration status:** Active Vite → Next.js migration. Faz 0 (scaffold),
-  Faz 1 (cookie auth), Faz 2 (public pages SSR) shipped. Faz 3+ pending.
-- **Deploy:** rsync `dist/` (Vite) and `.next/standalone + .next/static`
-  (Next.js) to VPS; pm2 manages `streamia-api` (port 3001) and
-  `streamia-web` (Next.js, port 3100).
-- **Auth model:** httpOnly cookies (`sl_access`, `sl_refresh`) + Bearer
-  fallback for legacy clients. Cookies are same-site Lax under `.streamia.co`.
+- **Repos:** `streamia` (frontend, Next.js 14 App Router, branch `main`) and
+  `streamia_api` (backend, Express + Drizzle, branch `main`).
+- **Frontend stack:** Next.js 14 App Router (React 18), Tailwind, Zustand,
+  SWR, Socket.IO client, react-easy-crop, lucide-react. No Vite, no
+  react-router-dom — `lib/router-shim.js` provides a small react-router-dom
+  compat layer for any code that still imports the old names.
+- **Deploy:** rsync `.next/standalone + .next/static` to
+  `/srv/streamia-next/` on the VPS; pm2 manages `streamia-api` (port 3001)
+  and `streamia-web` (Next.js, port 3100). Caddy reverse-proxies
+  test.streamia.co → localhost:3100 for everything.
+- **Auth model:** httpOnly cookies (`sl_access`, `sl_refresh`) on
+  `.streamia.co` (so Next middleware on test.streamia.co reads them) +
+  Bearer fallback for legacy / non-browser clients. SameSite=Lax.
+- **Migration history:** Faz 0 (scaffold), Faz 1 (cookie auth), Faz 2
+  (public pages SSR), Faz 3 (auth-gated shell + middleware), Faz 4 (Feed +
+  Profile + Network), Faz 5 (remaining 12 pages mass-port), Faz 6 (Vite
+  removal). All shipped on `main`. Faz 7+ (i18n, OG images, performance)
+  is optional polish.
