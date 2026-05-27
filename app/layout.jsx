@@ -1,5 +1,29 @@
 import './globals.css'
 import SupportFab from '@/components/SupportFab'
+import { Fraunces, Hanken_Grotesk, JetBrains_Mono } from 'next/font/google'
+
+// Display: editorial serif with optical sizing for hero headlines.
+// Variable font — explicit weight array omitted so all weights are streamed.
+const fontDisplay = Fraunces({
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+  axes: ['opsz'],
+})
+
+// Body: Hanken Grotesk — characterful neo-grotesque, replaces Plus Jakarta Sans.
+const fontSans = Hanken_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+})
+
+// Mono: JetBrains Mono — eyebrow labels, oversized counters, code-feel detail.
+const fontMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  display: 'swap',
+})
 
 export const metadata = {
   metadataBase: new URL('https://streamia.co'),
@@ -44,7 +68,10 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      className={`${fontDisplay.variable} ${fontSans.variable} ${fontMono.variable}`}
+    >
       <body className="bg-bg text-gray-900 font-sans antialiased">
         {children}
         <SupportFab />

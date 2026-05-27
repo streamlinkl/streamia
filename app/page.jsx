@@ -28,28 +28,28 @@ function KickMark({ className }) {
 }
 
 const FEATURES = [
-  { key: 'network',   Icon: Handshake,     accent: 'bg-violet-50 text-violet-600 ring-violet-100',
+  { key: 'network',   no: '01', Icon: Handshake,
     title: 'Professional Network',
-    desc: 'Connect with 42K+ streamers, find collab partners and build a real creator community.' },
-  { key: 'deals',     Icon: DollarSign,    accent: 'bg-emerald-50 text-emerald-600 ring-emerald-100',
+    desc: 'Connect with thousands of verified streamers, find collab partners and build a real creator community.' },
+  { key: 'deals',     no: '02', Icon: DollarSign,
     title: 'Brand Partnerships',
     desc: 'Get matched with brands actively hiring creators. Apply, negotiate and close deals in one place.' },
-  { key: 'analytics', Icon: BarChart3,     accent: 'bg-sky-50 text-sky-600 ring-sky-100',
+  { key: 'analytics', no: '03', Icon: BarChart3,
     title: 'Channel Analytics',
     desc: 'Track your growth, viewer stats and revenue trends in a dashboard built for creators.' },
-  { key: 'messaging', Icon: MessageSquare, accent: 'bg-amber-50 text-amber-600 ring-amber-100',
+  { key: 'messaging', no: '04', Icon: MessageSquare,
     title: 'Direct Messaging',
     desc: 'DM any streamer, brand or agency. No middleman, no cold emails — just conversations.' },
-  { key: 'companies', Icon: Building2,     accent: 'bg-rose-50 text-rose-600 ring-rose-100',
+  { key: 'companies', no: '05', Icon: Building2,
     title: 'Company Pages',
     desc: 'Discover agencies and brands looking for creators in your niche with verified company profiles.' },
-  { key: 'schedule',  Icon: Calendar,      accent: 'bg-indigo-50 text-indigo-600 ring-indigo-100',
+  { key: 'schedule',  no: '06', Icon: Calendar,
     title: 'Stream Schedule',
     desc: 'Share your go-live calendar, let fans subscribe to reminders and plan collabs with ease.' },
 ]
 
 const BRAND_BULLETS = [
-  { Icon: Users, text: '42,000+ verified streamers to discover' },
+  { Icon: Users, text: 'Verified streamers across every niche' },
   { Icon: BadgeCheck, text: 'Authenticated Twitch, Kick and YouTube profiles' },
   { Icon: BarChart3, text: 'Real-time campaign analytics' },
   { Icon: MessageSquare, text: 'Direct messaging with creators, zero commissions' },
@@ -57,265 +57,262 @@ const BRAND_BULLETS = [
 
 export default function Page() {
   return (
-    <div className="min-h-screen bg-white font-sans text-gray-900">
+    <div className="min-h-screen bg-white font-sans text-ink">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-ink focus:text-white focus:rounded-full focus:font-semibold focus:text-caption">Skip to content</a>
       {/* Nav */}
-      <nav className="sticky top-0 z-40 bg-white/85 backdrop-blur border-b border-gray-100">
+      <nav aria-label="Main" className="sticky top-0 z-40 bg-paper/85 backdrop-blur border-b border-rule">
         <div className="max-w-6xl mx-auto h-16 flex items-center px-6">
-          <Link href="/" className="flex items-center gap-2 text-[17px] font-extrabold tracking-tight">
-            <span className="w-9 h-9 bg-gray-900 rounded-xl flex items-center justify-center text-white">
-              <Zap className="w-4 h-4" strokeWidth={2.5} />
+          <Link href="/" className="flex items-center gap-2 text-[17px] font-bold tracking-tight text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-md">
+            <span className="w-9 h-9 bg-ink rounded-xl flex items-center justify-center text-white" aria-hidden>
+              <Zap className="w-4 h-4" strokeWidth={2.5} aria-hidden />
             </span>
             Stream<span className="text-accent">Link</span>
           </Link>
-          <div className="hidden md:flex items-center gap-7 ml-10 text-[13.5px] text-gray-500 font-semibold">
-            <a href="#features" className="hover:text-gray-900 transition">Platform</a>
-            <a href="#brands" className="hover:text-gray-900 transition">For brands &amp; agencies</a>
-            <Link href="/pricing" className="hover:text-gray-900 transition">Upgrade</Link>
+          <div className="hidden md:flex items-center gap-7 ml-10 text-caption text-muted font-semibold">
+            <a href="#features" className="hover:text-ink transition focus-visible:outline-none focus-visible:text-ink">Platform</a>
+            <a href="#brands" className="hover:text-ink transition focus-visible:outline-none focus-visible:text-ink">For brands &amp; agencies</a>
+            <Link href="/pricing" className="hover:text-ink transition focus-visible:outline-none focus-visible:text-ink">Upgrade</Link>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <Link href="/login" className="px-3 py-1.5 text-[13.5px] font-semibold text-gray-600 hover:text-gray-900 transition">Sign in</Link>
-            <Link href="/register" className="group inline-flex items-center gap-1.5 px-4 py-2 bg-gray-900 hover:bg-black text-white text-[13px] font-bold rounded-full transition">
+            <Link href="/login" className="px-3 py-1.5 text-caption font-semibold text-muted hover:text-ink transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-full">Sign in</Link>
+            <Link href="/register" className="group inline-flex items-center gap-1.5 px-4 py-2 bg-ink hover:bg-black text-white text-caption font-semibold rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
               Get started
-              <ArrowRight className="w-3.5 h-3.5 -mr-0.5 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
+              <ArrowRight className="w-3.5 h-3.5 -mr-0.5 transition-transform group-hover:translate-x-0.5" strokeWidth={2.25} aria-hidden />
             </Link>
           </div>
         </div>
       </nav>
 
+      <main id="main-content">
       {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-24 -left-20 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
-          <div className="absolute top-1/3 -right-24 w-[28rem] h-[28rem] bg-violet-200/40 rounded-full blur-3xl" />
-        </div>
-
-        <div className="relative max-w-6xl mx-auto px-6 pt-20 pb-24 grid lg:grid-cols-[1.05fr_1fr] gap-14 items-center">
+      <section aria-label="Hero" className="relative overflow-hidden">
+        <div className="relative max-w-6xl mx-auto px-6 pt-16 sm:pt-20 pb-20 sm:pb-24 grid lg:grid-cols-[1.05fr_1fr] gap-12 lg:gap-14 items-center">
           <div>
-            <div className="inline-flex items-center gap-2 pl-2 pr-3 py-1.5 bg-white border border-gray-200 rounded-full text-[11.5px] font-bold uppercase tracking-wider text-gray-700 shadow-sm">
-              <span className="inline-flex items-center justify-center w-5 h-5 bg-accent-lt text-accent rounded-full">
+            <div className="inline-flex items-center gap-2 pl-1.5 pr-3 py-1 border border-rule rounded-full text-micro font-mono font-semibold uppercase text-muted bg-paper">
+              <span className="inline-flex items-center justify-center w-5 h-5 bg-accent text-white rounded-full" aria-hidden>
                 <Radio className="w-3 h-3" strokeWidth={2.5} />
               </span>
               Built for livestreamers
             </div>
 
-            <h1 className="text-[44px] md:text-[56px] font-extrabold leading-[1.05] tracking-tight mt-6">
-              The professional<br />
-              <span className="bg-gradient-to-r from-accent to-violet-500 bg-clip-text text-transparent">home for streamers.</span>
+            <h1 className="font-display text-h2-lg sm:text-display md:text-display-lg text-ink mt-6 font-medium">
+              The professional{' '}
+              <em className="not-italic md:italic text-accent-dk font-medium">home</em>{' '}
+              for streamers.
             </h1>
-            <p className="text-[15.5px] text-gray-500 leading-relaxed mt-5 max-w-lg">
+            <p className="text-lede text-muted mt-5 max-w-lg">
               Connect with top streamers, land brand deals, find collaborators and track your growth — all in one professional network built for creators.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 mt-8">
-              <Link href="/register" className="group inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-900 hover:bg-black text-white font-bold rounded-full transition shadow-sm">
+              <Link href="/register" className="group inline-flex items-center justify-center gap-2 px-6 py-3 bg-ink hover:bg-black text-white font-semibold rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white">
                 Create your free profile
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" strokeWidth={2.25} aria-hidden />
               </Link>
-              <Link href="/login" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-gray-200 hover:border-gray-400 text-gray-700 font-semibold rounded-full transition">
+              <Link href="/login" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-rule hover:border-ink text-ink font-semibold rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white">
                 Explore the feed
               </Link>
             </div>
 
-            <div className="mt-7 flex items-center gap-2 text-[12.5px] text-gray-500">
-              <Check className="w-4 h-4 text-emerald-500" strokeWidth={3} />
-              <span>Free forever for streamers</span>
-              <span className="mx-1 text-gray-300">·</span>
-              <Check className="w-4 h-4 text-emerald-500" strokeWidth={3} />
-              <span>No credit card required</span>
+            <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-caption text-muted">
+              <span className="inline-flex items-center gap-1.5">
+                <Check className="w-4 h-4 text-emerald-600" strokeWidth={3} aria-hidden />
+                Free forever for streamers
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Check className="w-4 h-4 text-emerald-600" strokeWidth={3} aria-hidden />
+                No credit card required
+              </span>
             </div>
 
-            <div className="mt-10 pt-8 border-t border-gray-100">
-              <div className="text-[10.5px] font-extrabold text-gray-400 uppercase tracking-[0.15em] mb-3">Works with your platforms</div>
+            <div className="mt-10 pt-8 border-t border-rule">
+              <div className="text-micro font-mono font-semibold uppercase text-muted mb-3">Works with your platforms</div>
               <div className="flex flex-wrap items-center gap-2">
                 {[
                   { Mark: TwitchMark, name: 'Twitch', cls: 'text-[#9146FF]' },
                   { Mark: KickMark, name: 'Kick', cls: 'text-[#53FC18]' },
                   { Mark: YouTubeMark, name: 'YouTube', cls: 'text-[#FF0033]' },
                 ].map(({ Mark, name, cls }) => (
-                  <div key={name} className="inline-flex items-center gap-2 pl-2.5 pr-3.5 py-1.5 bg-white border border-gray-200 rounded-full text-[12px] font-bold text-gray-700">
+                  <div key={name} className="inline-flex items-center gap-2 pl-2.5 pr-3.5 py-1.5 border border-rule rounded-full text-caption font-semibold text-ink bg-paper">
                     <Mark className={`w-3.5 h-3.5 ${cls}`} />
                     {name}
                   </div>
                 ))}
               </div>
             </div>
-
-            <div className="flex gap-10 mt-9 pt-8 border-t border-gray-100">
-              {[
-                ['42,000+', 'Streamers'],
-                ['8,300',   'Live right now'],
-                ['$2.4M',   'Deals closed'],
-              ].map(([n, l]) => (
-                <div key={l}>
-                  <div className="text-[24px] font-extrabold tracking-tight">{n}</div>
-                  <div className="text-[11.5px] text-gray-400 mt-0.5 font-semibold">{l}</div>
-                </div>
-              ))}
-            </div>
           </div>
 
-          {/* Preview cards */}
+          {/* Preview cards — editorial flat with hairline borders */}
           <div className="relative">
-            <div className="absolute inset-4 bg-gradient-to-br from-accent/5 via-violet-100/40 to-transparent rounded-3xl -z-10" />
             <div className="grid grid-cols-6 gap-3">
-              <div className="col-span-6 bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_4px_20px_-6px_rgba(15,23,42,0.08)]">
+              <div className="col-span-6 bg-paper border border-rule rounded-2xl p-5 shadow-card">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-600 to-purple-700 flex items-center justify-center text-white font-bold text-xs shadow-sm">SV</div>
+                  <div className="w-10 h-10 rounded-full bg-ink flex items-center justify-center text-white font-mono font-semibold text-[11px]">SV</div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[13px] font-extrabold truncate">ShadowViper</span>
-                      <BadgeCheck className="w-4 h-4 text-sky-500" fill="currentColor" strokeWidth={0} />
+                      <span className="text-caption font-bold text-ink truncate">ShadowViper</span>
+                      <BadgeCheck className="w-4 h-4 text-sky-500" fill="currentColor" strokeWidth={0} aria-hidden />
                     </div>
-                    <div className="text-[10.5px] text-gray-400 font-semibold">Twitch Partner · Horror games</div>
+                    <div className="text-micro font-mono text-muted">Twitch Partner · Horror games</div>
                   </div>
-                  <div className="text-[10px] bg-rose-50 text-rose-600 font-extrabold px-2 py-0.5 rounded-full tracking-wider">LIVE</div>
+                  <div className="inline-flex items-center gap-1 text-micro font-mono font-bold text-live uppercase">
+                    <span className="w-1.5 h-1.5 rounded-full bg-live animate-pulse" aria-hidden />
+                    Live
+                  </div>
                 </div>
-                <p className="text-[13px] text-gray-700 leading-relaxed">
-                  Just hit <strong className="text-gray-900">100,000 followers</strong> on Twitch! 3 years of late nights and horror games finally paid off.
+                <p className="text-caption text-ink/80 leading-relaxed">
+                  Just hit <strong className="text-ink">100,000 followers</strong> on Twitch! 3 years of late nights and horror games finally paid off.
                 </p>
-                <div className="flex items-center gap-5 mt-4 pt-3 border-t border-gray-100 text-gray-500">
-                  <div className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold"><Heart className="w-3.5 h-3.5" strokeWidth={2.25} /> 3.2K</div>
-                  <div className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold"><MessageCircle className="w-3.5 h-3.5" strokeWidth={2.25} /> 847</div>
-                  <div className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold ml-auto"><Share2 className="w-3.5 h-3.5" strokeWidth={2.25} /> Share</div>
+                <div className="flex items-center gap-5 mt-4 pt-3 border-t border-rule text-muted">
+                  <div className="inline-flex items-center gap-1.5 text-caption font-medium"><Heart className="w-3.5 h-3.5" strokeWidth={2} aria-hidden /> 3.2K</div>
+                  <div className="inline-flex items-center gap-1.5 text-caption font-medium"><MessageCircle className="w-3.5 h-3.5" strokeWidth={2} aria-hidden /> 847</div>
+                  <div className="inline-flex items-center gap-1.5 text-caption font-medium ml-auto"><Share2 className="w-3.5 h-3.5" strokeWidth={2} aria-hidden /> Share</div>
                 </div>
               </div>
 
-              <div className="col-span-3 bg-white border border-gray-200 rounded-2xl p-4 shadow-[0_4px_20px_-6px_rgba(15,23,42,0.08)]">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-[10px]">NX</div>
+              <div className="col-span-3 bg-paper border border-rule rounded-2xl p-4 shadow-card">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-full bg-ink flex items-center justify-center text-white font-mono font-semibold text-[10px]">NX</div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[12px] font-extrabold truncate">NeonXtra</div>
-                    <div className="flex items-center gap-1 text-[10px] text-gray-400 font-semibold">
+                    <div className="text-caption font-bold text-ink truncate">NeonXtra</div>
+                    <div className="flex items-center gap-1 text-micro font-mono text-muted">
                       <KickMark className="w-3 h-3 text-[#53FC18]" />
                       Kick · FPS
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 px-2.5 py-1.5 bg-violet-50 rounded-lg">
-                  <Handshake className="w-3.5 h-3.5 text-violet-600" strokeWidth={2.25} />
-                  <span className="text-[11.5px] font-semibold text-violet-700">Looking for duo collab</span>
+                <div className="flex items-center gap-2 px-2.5 py-1.5 bg-accent-lt rounded-lg">
+                  <Handshake className="w-3.5 h-3.5 text-accent-dk" strokeWidth={2} aria-hidden />
+                  <span className="text-caption font-semibold text-accent-dk">Looking for duo collab</span>
                 </div>
               </div>
 
-              <div className="col-span-3 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 shadow-[0_4px_20px_-6px_rgba(15,23,42,0.08)]">
-                <div className="inline-flex items-center gap-1 text-[9.5px] font-extrabold text-amber-700 uppercase tracking-wider bg-amber-100/60 px-2 py-0.5 rounded-full mb-2">
-                  <DollarSign className="w-3 h-3" strokeWidth={2.5} />
+              <div className="col-span-3 bg-ink text-white border border-ink rounded-2xl p-4 shadow-card relative overflow-hidden">
+                <div className="inline-flex items-center gap-1 text-micro font-mono font-bold uppercase text-amber-300 mb-3">
+                  <DollarSign className="w-3 h-3" strokeWidth={2.5} aria-hidden />
                   Brand deal
                 </div>
-                <div className="text-[13px] font-extrabold">RedBull Gaming</div>
-                <div className="text-[11px] text-gray-600 mt-0.5">FPS streamers 50K+ followers</div>
-                <div className="text-[13px] font-extrabold text-amber-700 mt-2">$2,500 <span className="text-[10px] font-semibold text-amber-600">/ stream</span></div>
+                <div className="text-caption font-bold">RedBull Gaming</div>
+                <div className="text-micro font-mono text-white/60 mt-0.5">FPS · 50K+ followers</div>
+                <div className="font-display text-[28px] leading-none tracking-tight mt-3">$2,500<span className="text-micro font-mono text-white/60 ml-1.5">/stream</span></div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Logo bar */}
-      <section className="border-y border-gray-100 bg-gray-50/80">
-        <div className="max-w-6xl mx-auto px-6 py-6 flex items-center gap-4 flex-wrap">
-          <span className="text-[11px] font-extrabold text-gray-400 uppercase tracking-[0.15em]">Trusted by creators partnered with</span>
-          <div className="flex-1 flex items-center justify-end gap-7 flex-wrap opacity-70">
+      {/* Trust strip — editorial imprint */}
+      <section className="border-y border-rule bg-paper">
+        <div className="max-w-6xl mx-auto px-6 py-7 flex items-center gap-x-8 gap-y-4 flex-wrap">
+          <span className="text-micro font-mono font-semibold uppercase text-muted">Trusted by creators<br className="hidden sm:inline" /> partnered with</span>
+          <div className="flex-1 flex items-center justify-start sm:justify-end gap-x-7 gap-y-3 flex-wrap">
             {['RedBull', 'Logitech', 'NVIDIA', 'SteelSeries', 'Razer', 'ASUS ROG'].map((b) => (
-              <span key={b} className="text-[13px] font-extrabold tracking-tight text-gray-500">{b}</span>
+              <span key={b} className="text-caption font-semibold tracking-tight text-ink/70">{b}</span>
             ))}
           </div>
         </div>
       </section>
 
       {/* Features */}
-      <section id="features" className="py-24">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent-lt text-accent rounded-full text-[11px] font-extrabold uppercase tracking-wider mb-4">
-            <Sparkles className="w-3.5 h-3.5" strokeWidth={2.5} />
-            Platform
+      <section id="features" className="py-24 scroll-mt-20 border-t border-rule">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="inline-flex items-center gap-2 text-micro font-mono font-semibold uppercase text-muted mb-4">
+            <Sparkles className="w-3.5 h-3.5 text-accent" strokeWidth={2} aria-hidden />
+            <span>Platform · 06 modules</span>
           </div>
-          <h2 className="text-[34px] md:text-4xl font-extrabold tracking-tight">Everything a streamer needs</h2>
-          <p className="text-gray-500 mt-3 text-[15px]">One platform, your entire streaming career.</p>
+          <h2 className="font-display text-h2 sm:text-h2-lg text-ink">Everything a streamer needs,<br className="hidden sm:inline" /> <em className="italic text-accent-dk font-medium">in one place.</em></h2>
+          <p className="text-muted mt-4 text-lede max-w-xl">One platform, your entire streaming career — discover, connect, negotiate, broadcast, grow.</p>
         </div>
-        <div className="max-w-5xl mx-auto px-6 mt-12 grid md:grid-cols-3 gap-4">
-          {FEATURES.map(({ key, Icon, accent, title, desc }) => (
-            <div key={key} className="group relative bg-white border border-gray-200 rounded-2xl p-6 transition hover:border-gray-300 hover:shadow-[0_8px_32px_-12px_rgba(15,23,42,0.12)]">
-              <div className={`inline-flex items-center justify-center w-11 h-11 rounded-xl ring-8 ${accent}`}>
-                <Icon className="w-5 h-5" strokeWidth={2.25} />
+        <div className="max-w-5xl mx-auto px-6 mt-14 grid md:grid-cols-2 lg:grid-cols-3 border-t border-l border-rule">
+          {FEATURES.map(({ key, no, Icon, title, desc }) => (
+            <div key={key} className="group relative p-7 border-r border-b border-rule bg-paper transition hover:bg-white">
+              <div className="flex items-start justify-between mb-10">
+                <div className="font-display text-[44px] leading-none text-muted/30 group-hover:text-accent transition tracking-tight tabular-nums" aria-hidden>{no}</div>
+                <Icon className="w-5 h-5 text-muted group-hover:text-ink transition" strokeWidth={1.75} aria-hidden />
               </div>
-              <div className="font-extrabold mt-5 text-[15px]">{title}</div>
-              <div className="text-[13.5px] text-gray-500 leading-relaxed mt-1.5">{desc}</div>
+              <div className="font-semibold text-h3 text-ink">{title}</div>
+              <div className="text-body text-muted leading-relaxed mt-2">{desc}</div>
             </div>
           ))}
         </div>
       </section>
 
       {/* For brands band */}
-      <section id="brands" className="py-20 bg-gray-900 text-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.07] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
-        <div className="relative max-w-5xl mx-auto px-6 grid md:grid-cols-[1.15fr_1fr] gap-12 items-center">
+      <section id="brands" className="py-24 bg-ink text-white relative overflow-hidden scroll-mt-20">
+        <div className="relative max-w-5xl mx-auto px-6 grid md:grid-cols-[1.15fr_1fr] gap-12 lg:gap-16 items-start">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 text-white rounded-full text-[11px] font-extrabold uppercase tracking-wider mb-4">
+            <div className="inline-flex items-center gap-2 text-micro font-mono font-semibold uppercase text-white/60 mb-5">
+              <span className="w-6 h-px bg-white/40" aria-hidden />
               For brands &amp; agencies
             </div>
-            <h3 className="text-3xl md:text-4xl font-extrabold tracking-tight leading-tight">
-              Find verified creators.<br />Run campaigns that convert.
-            </h3>
-            <p className="text-gray-400 mt-4 max-w-md text-[15px] leading-relaxed">
+            <h2 className="font-display text-h2 sm:text-h2-lg text-white leading-tight">
+              Find verified creators.<br />
+              <em className="italic text-white/70 font-medium">Run campaigns that convert.</em>
+            </h2>
+            <p className="text-white/60 mt-5 max-w-md text-lede leading-relaxed">
               Post deals, discover niche-perfect streamers, and track applications in one workspace. Replace spreadsheets and cold outreach with a proper platform.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 mt-7">
-              <Link href="/register/company" className="group inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-900 font-bold rounded-full hover:bg-gray-100 transition">
+            <div className="flex flex-col sm:flex-row gap-3 mt-8">
+              <Link href="/register/company" className="group inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-ink font-semibold rounded-full hover:bg-paper transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-ink">
                 Create a brand page
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" strokeWidth={2.25} aria-hidden />
               </Link>
-              <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 hover:border-white/50 text-white font-semibold rounded-full transition">
+              <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/25 hover:border-white text-white font-semibold rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-ink">
                 See brand pricing
               </Link>
             </div>
           </div>
-          <div className="space-y-3">
+          <ul className="border-t border-white/15">
             {BRAND_BULLETS.map(({ Icon, text }) => (
-              <div key={text} className="flex items-start gap-3 p-4 bg-white/5 border border-white/10 rounded-xl">
-                <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
-                  <Icon className="w-4 h-4" strokeWidth={2.25} />
-                </div>
-                <div className="text-[13.5px] text-gray-200 font-medium leading-snug pt-1.5">{text}</div>
-              </div>
+              <li key={text} className="flex items-start gap-4 py-4 border-b border-white/15">
+                <Icon className="w-4 h-4 mt-1 text-white/70 flex-shrink-0" strokeWidth={1.75} aria-hidden />
+                <div className="text-body text-white/85 leading-snug">{text}</div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="py-24 text-center">
+      <section className="py-28 text-center border-t border-rule">
         <div className="max-w-3xl mx-auto px-6">
-          <h2 className="text-[32px] md:text-4xl font-extrabold tracking-tight">Ready to grow your streaming career?</h2>
-          <p className="text-gray-500 mt-4 text-[15px]">Join thousands of streamers already on StreamLink. Free forever.</p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
-            <Link href="/register" className="group inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-gray-900 hover:bg-black text-white font-bold rounded-full text-[14.5px] transition shadow-sm">
+          <div className="text-micro font-mono font-semibold uppercase text-muted mb-5">— Start free, forever —</div>
+          <h2 className="font-display text-h2 sm:text-h2-lg text-ink">
+            Ready to grow your{' '}
+            <em className="italic text-accent-dk font-medium">streaming</em>{' '}
+            career?
+          </h2>
+          <p className="text-muted mt-4 text-lede">Join the streamers already on StreamLink.</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-9">
+            <Link href="/register" className="group inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-ink hover:bg-black text-white font-semibold rounded-full text-body transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white">
               Create your free profile
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" strokeWidth={2.25} aria-hidden />
             </Link>
-            <Link href="/login" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 border border-gray-200 hover:border-gray-400 text-gray-700 font-semibold rounded-full text-[14.5px] transition">
+            <Link href="/login" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 border border-rule hover:border-ink text-ink font-semibold rounded-full text-body transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white">
               Sign in
             </Link>
           </div>
         </div>
       </section>
 
+      </main>
+
       {/* Footer */}
-      <footer className="border-t border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col md:flex-row items-start md:items-center gap-6">
-          <Link href="/" className="flex items-center gap-2 text-[15px] font-extrabold tracking-tight">
-            <span className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center text-white">
-              <Zap className="w-3.5 h-3.5" strokeWidth={2.5} />
+      <footer className="border-t border-rule bg-paper">
+        <div className="max-w-6xl mx-auto px-6 py-12 flex flex-col md:flex-row items-start md:items-center gap-6">
+          <Link href="/" className="flex items-center gap-2 text-[15px] font-bold tracking-tight text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-md">
+            <span className="w-8 h-8 bg-ink rounded-lg flex items-center justify-center text-white" aria-hidden>
+              <Zap className="w-3.5 h-3.5" strokeWidth={2.5} aria-hidden />
             </span>
             Stream<span className="text-accent">Link</span>
           </Link>
-          <div className="flex items-center gap-5 text-[12.5px] font-semibold text-gray-500">
-            <a href="#features" className="hover:text-gray-900 transition">Platform</a>
-            <Link href="/pricing" className="hover:text-gray-900 transition">Upgrade</Link>
-            <Link href="/register/company" className="hover:text-gray-900 transition">For brands</Link>
-          </div>
-          <div className="md:ml-auto text-[11.5px] text-gray-400">
-            © {new Date().getFullYear()} StreamLink · Built for streamers, by streamers.
+          <nav aria-label="Footer" className="flex items-center gap-6 text-caption font-mono font-semibold uppercase text-muted">
+            <a href="#features" className="hover:text-ink transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm">Platform</a>
+            <Link href="/pricing" className="hover:text-ink transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm">Upgrade</Link>
+            <Link href="/register/company" className="hover:text-ink transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm">For brands</Link>
+          </nav>
+          <div className="md:ml-auto text-micro font-mono text-muted">
+            © {new Date().getFullYear()} · Built for streamers, by streamers
           </div>
         </div>
       </footer>
