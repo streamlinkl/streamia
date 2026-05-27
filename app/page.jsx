@@ -28,28 +28,28 @@ function KickMark({ className }) {
 }
 
 const FEATURES = [
-  { key: 'network',   Icon: Handshake,     accent: 'bg-violet-50 text-violet-600 ring-violet-100',
+  { key: 'network',   no: '01', Icon: Handshake,
     title: 'Professional Network',
-    desc: 'Connect with 42K+ streamers, find collab partners and build a real creator community.' },
-  { key: 'deals',     Icon: DollarSign,    accent: 'bg-emerald-50 text-emerald-600 ring-emerald-100',
+    desc: 'Connect with thousands of verified streamers, find collab partners and build a real creator community.' },
+  { key: 'deals',     no: '02', Icon: DollarSign,
     title: 'Brand Partnerships',
     desc: 'Get matched with brands actively hiring creators. Apply, negotiate and close deals in one place.' },
-  { key: 'analytics', Icon: BarChart3,     accent: 'bg-sky-50 text-sky-600 ring-sky-100',
+  { key: 'analytics', no: '03', Icon: BarChart3,
     title: 'Channel Analytics',
     desc: 'Track your growth, viewer stats and revenue trends in a dashboard built for creators.' },
-  { key: 'messaging', Icon: MessageSquare, accent: 'bg-amber-50 text-amber-600 ring-amber-100',
+  { key: 'messaging', no: '04', Icon: MessageSquare,
     title: 'Direct Messaging',
     desc: 'DM any streamer, brand or agency. No middleman, no cold emails — just conversations.' },
-  { key: 'companies', Icon: Building2,     accent: 'bg-rose-50 text-rose-600 ring-rose-100',
+  { key: 'companies', no: '05', Icon: Building2,
     title: 'Company Pages',
     desc: 'Discover agencies and brands looking for creators in your niche with verified company profiles.' },
-  { key: 'schedule',  Icon: Calendar,      accent: 'bg-indigo-50 text-indigo-600 ring-indigo-100',
+  { key: 'schedule',  no: '06', Icon: Calendar,
     title: 'Stream Schedule',
     desc: 'Share your go-live calendar, let fans subscribe to reminders and plan collabs with ease.' },
 ]
 
 const BRAND_BULLETS = [
-  { Icon: Users, text: '42,000+ verified streamers to discover' },
+  { Icon: Users, text: 'Verified streamers across every niche' },
   { Icon: BadgeCheck, text: 'Authenticated Twitch, Kick and YouTube profiles' },
   { Icon: BarChart3, text: 'Real-time campaign analytics' },
   { Icon: MessageSquare, text: 'Direct messaging with creators, zero commissions' },
@@ -212,62 +212,62 @@ export default function Page() {
       </section>
 
       {/* Features */}
-      <section id="features" className="py-24 scroll-mt-20">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent-lt text-accent rounded-full text-[11px] font-extrabold uppercase tracking-wider mb-4">
-            <Sparkles className="w-3.5 h-3.5" strokeWidth={2.5} />
-            Platform
+      <section id="features" className="py-24 scroll-mt-20 border-t border-rule">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="inline-flex items-center gap-2 text-micro font-mono font-semibold uppercase text-muted mb-4">
+            <Sparkles className="w-3.5 h-3.5 text-accent" strokeWidth={2} aria-hidden />
+            <span>Platform · 06 modules</span>
           </div>
-          <h2 className="text-[34px] md:text-4xl font-extrabold tracking-tight">Everything a streamer needs</h2>
-          <p className="text-gray-500 mt-3 text-[15px]">One platform, your entire streaming career.</p>
+          <h2 className="font-display text-h2 sm:text-h2-lg text-ink">Everything a streamer needs,<br className="hidden sm:inline" /> <em className="italic text-accent-dk font-medium">in one place.</em></h2>
+          <p className="text-muted mt-4 text-lede max-w-xl">One platform, your entire streaming career — discover, connect, negotiate, broadcast, grow.</p>
         </div>
-        <div className="max-w-5xl mx-auto px-6 mt-12 grid md:grid-cols-3 gap-4">
-          {FEATURES.map(({ key, Icon, accent, title, desc }) => (
-            <div key={key} className="group relative bg-white border border-gray-200 rounded-2xl p-6 transition hover:border-gray-300 hover:shadow-[0_8px_32px_-12px_rgba(15,23,42,0.12)]">
-              <div className={`inline-flex items-center justify-center w-11 h-11 rounded-xl ring-8 ${accent}`}>
-                <Icon className="w-5 h-5" strokeWidth={2.25} />
+        <div className="max-w-5xl mx-auto px-6 mt-14 grid md:grid-cols-2 lg:grid-cols-3 border-t border-l border-rule">
+          {FEATURES.map(({ key, no, Icon, title, desc }) => (
+            <div key={key} className="group relative p-7 border-r border-b border-rule bg-paper transition hover:bg-white">
+              <div className="flex items-start justify-between mb-10">
+                <div className="font-display text-[44px] leading-none text-muted/30 group-hover:text-accent transition tracking-tight tabular-nums" aria-hidden>{no}</div>
+                <Icon className="w-5 h-5 text-muted group-hover:text-ink transition" strokeWidth={1.75} aria-hidden />
               </div>
-              <div className="font-extrabold mt-5 text-[15px]">{title}</div>
-              <div className="text-[13.5px] text-gray-500 leading-relaxed mt-1.5">{desc}</div>
+              <div className="font-semibold text-h3 text-ink">{title}</div>
+              <div className="text-body text-muted leading-relaxed mt-2">{desc}</div>
             </div>
           ))}
         </div>
       </section>
 
       {/* For brands band */}
-      <section id="brands" className="py-20 bg-gray-900 text-white relative overflow-hidden scroll-mt-20">
-        <div className="absolute inset-0 opacity-[0.07] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
-        <div className="relative max-w-5xl mx-auto px-6 grid md:grid-cols-[1.15fr_1fr] gap-12 items-center">
+      <section id="brands" className="py-24 bg-ink text-white relative overflow-hidden scroll-mt-20">
+        <div className="relative max-w-5xl mx-auto px-6 grid md:grid-cols-[1.15fr_1fr] gap-12 lg:gap-16 items-start">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 text-white rounded-full text-[11px] font-extrabold uppercase tracking-wider mb-4">
+            <div className="inline-flex items-center gap-2 text-micro font-mono font-semibold uppercase text-white/60 mb-5">
+              <span className="w-6 h-px bg-white/40" aria-hidden />
               For brands &amp; agencies
             </div>
-            <h3 className="text-3xl md:text-4xl font-extrabold tracking-tight leading-tight">
-              Find verified creators.<br />Run campaigns that convert.
+            <h3 className="font-display text-h2 sm:text-h2-lg text-white leading-tight">
+              Find verified creators.<br />
+              <em className="italic text-white/70 font-medium">Run campaigns that convert.</em>
             </h3>
-            <p className="text-gray-400 mt-4 max-w-md text-[15px] leading-relaxed">
+            <p className="text-white/60 mt-5 max-w-md text-lede leading-relaxed">
               Post deals, discover niche-perfect streamers, and track applications in one workspace. Replace spreadsheets and cold outreach with a proper platform.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 mt-7">
-              <Link href="/register/company" className="group inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-900 font-bold rounded-full hover:bg-gray-100 transition">
+            <div className="flex flex-col sm:flex-row gap-3 mt-8">
+              <Link href="/register/company" className="group inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-ink font-semibold rounded-full hover:bg-paper transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-ink">
                 Create a brand page
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" strokeWidth={2.25} aria-hidden />
               </Link>
-              <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 hover:border-white/50 text-white font-semibold rounded-full transition">
+              <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/25 hover:border-white text-white font-semibold rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-ink">
                 See brand pricing
               </Link>
             </div>
           </div>
-          <div className="space-y-3">
+          <ul className="border-t border-white/15">
             {BRAND_BULLETS.map(({ Icon, text }) => (
-              <div key={text} className="flex items-start gap-3 p-4 bg-white/5 border border-white/10 rounded-xl">
-                <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
-                  <Icon className="w-4 h-4" strokeWidth={2.25} />
-                </div>
-                <div className="text-[13.5px] text-gray-200 font-medium leading-snug pt-1.5">{text}</div>
-              </div>
+              <li key={text} className="flex items-start gap-4 py-4 border-b border-white/15">
+                <Icon className="w-4 h-4 mt-1 text-white/70 flex-shrink-0" strokeWidth={1.75} aria-hidden />
+                <div className="text-body text-white/85 leading-snug">{text}</div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
 
