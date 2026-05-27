@@ -57,26 +57,26 @@ const BRAND_BULLETS = [
 
 export default function Page() {
   return (
-    <div className="min-h-screen bg-white font-sans text-gray-900">
+    <div className="min-h-screen bg-white font-sans text-ink">
       {/* Nav */}
-      <nav className="sticky top-0 z-40 bg-white/85 backdrop-blur border-b border-gray-100">
+      <nav className="sticky top-0 z-40 bg-paper/85 backdrop-blur border-b border-rule">
         <div className="max-w-6xl mx-auto h-16 flex items-center px-6">
-          <Link href="/" className="flex items-center gap-2 text-[17px] font-extrabold tracking-tight">
-            <span className="w-9 h-9 bg-gray-900 rounded-xl flex items-center justify-center text-white">
+          <Link href="/" className="flex items-center gap-2 text-[17px] font-bold tracking-tight text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-md">
+            <span className="w-9 h-9 bg-ink rounded-xl flex items-center justify-center text-white" aria-hidden>
               <Zap className="w-4 h-4" strokeWidth={2.5} />
             </span>
             Stream<span className="text-accent">Link</span>
           </Link>
-          <div className="hidden md:flex items-center gap-7 ml-10 text-[13.5px] text-gray-500 font-semibold">
-            <a href="#features" className="hover:text-gray-900 transition">Platform</a>
-            <a href="#brands" className="hover:text-gray-900 transition">For brands &amp; agencies</a>
-            <Link href="/pricing" className="hover:text-gray-900 transition">Upgrade</Link>
+          <div className="hidden md:flex items-center gap-7 ml-10 text-caption text-muted font-semibold">
+            <a href="#features" className="hover:text-ink transition focus-visible:outline-none focus-visible:text-ink">Platform</a>
+            <a href="#brands" className="hover:text-ink transition focus-visible:outline-none focus-visible:text-ink">For brands &amp; agencies</a>
+            <Link href="/pricing" className="hover:text-ink transition focus-visible:outline-none focus-visible:text-ink">Upgrade</Link>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <Link href="/login" className="px-3 py-1.5 text-[13.5px] font-semibold text-gray-600 hover:text-gray-900 transition">Sign in</Link>
-            <Link href="/register" className="group inline-flex items-center gap-1.5 px-4 py-2 bg-gray-900 hover:bg-black text-white text-[13px] font-bold rounded-full transition">
+            <Link href="/login" className="px-3 py-1.5 text-caption font-semibold text-muted hover:text-ink transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-full">Sign in</Link>
+            <Link href="/register" className="group inline-flex items-center gap-1.5 px-4 py-2 bg-ink hover:bg-black text-white text-caption font-semibold rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
               Get started
-              <ArrowRight className="w-3.5 h-3.5 -mr-0.5 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
+              <ArrowRight className="w-3.5 h-3.5 -mr-0.5 transition-transform group-hover:translate-x-0.5" strokeWidth={2.25} aria-hidden />
             </Link>
           </div>
         </div>
@@ -199,13 +199,13 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Logo bar */}
-      <section className="border-y border-gray-100 bg-gray-50/80">
-        <div className="max-w-6xl mx-auto px-6 py-6 flex items-center gap-4 flex-wrap">
-          <span className="text-[11px] font-extrabold text-gray-400 uppercase tracking-[0.15em]">Trusted by creators partnered with</span>
-          <div className="flex-1 flex items-center justify-end gap-7 flex-wrap opacity-70">
+      {/* Trust strip — editorial imprint */}
+      <section className="border-y border-rule bg-paper">
+        <div className="max-w-6xl mx-auto px-6 py-7 flex items-center gap-x-8 gap-y-4 flex-wrap">
+          <span className="text-micro font-mono font-semibold uppercase text-muted">Trusted by creators<br className="hidden sm:inline" /> partnered with</span>
+          <div className="flex-1 flex items-center justify-start sm:justify-end gap-x-7 gap-y-3 flex-wrap">
             {['RedBull', 'Logitech', 'NVIDIA', 'SteelSeries', 'Razer', 'ASUS ROG'].map((b) => (
-              <span key={b} className="text-[13px] font-extrabold tracking-tight text-gray-500">{b}</span>
+              <span key={b} className="text-caption font-semibold tracking-tight text-ink/70">{b}</span>
             ))}
           </div>
         </div>
@@ -272,16 +272,21 @@ export default function Page() {
       </section>
 
       {/* CTA */}
-      <section className="py-24 text-center">
+      <section className="py-28 text-center border-t border-rule">
         <div className="max-w-3xl mx-auto px-6">
-          <h2 className="text-[32px] md:text-4xl font-extrabold tracking-tight">Ready to grow your streaming career?</h2>
-          <p className="text-gray-500 mt-4 text-[15px]">Join thousands of streamers already on StreamLink. Free forever.</p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
-            <Link href="/register" className="group inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-gray-900 hover:bg-black text-white font-bold rounded-full text-[14.5px] transition shadow-sm">
+          <div className="text-micro font-mono font-semibold uppercase text-muted mb-5">— Start free, forever —</div>
+          <h2 className="font-display text-h2 sm:text-h2-lg text-ink">
+            Ready to grow your{' '}
+            <em className="italic text-accent-dk font-medium">streaming</em>{' '}
+            career?
+          </h2>
+          <p className="text-muted mt-4 text-lede">Join the streamers already on StreamLink.</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-9">
+            <Link href="/register" className="group inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-ink hover:bg-black text-white font-semibold rounded-full text-body transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white">
               Create your free profile
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" strokeWidth={2.25} aria-hidden />
             </Link>
-            <Link href="/login" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 border border-gray-200 hover:border-gray-400 text-gray-700 font-semibold rounded-full text-[14.5px] transition">
+            <Link href="/login" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 border border-rule hover:border-ink text-ink font-semibold rounded-full text-body transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white">
               Sign in
             </Link>
           </div>
@@ -289,21 +294,21 @@ export default function Page() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col md:flex-row items-start md:items-center gap-6">
-          <Link href="/" className="flex items-center gap-2 text-[15px] font-extrabold tracking-tight">
-            <span className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center text-white">
+      <footer className="border-t border-rule bg-paper">
+        <div className="max-w-6xl mx-auto px-6 py-12 flex flex-col md:flex-row items-start md:items-center gap-6">
+          <Link href="/" className="flex items-center gap-2 text-[15px] font-bold tracking-tight text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-md">
+            <span className="w-8 h-8 bg-ink rounded-lg flex items-center justify-center text-white" aria-hidden>
               <Zap className="w-3.5 h-3.5" strokeWidth={2.5} />
             </span>
             Stream<span className="text-accent">Link</span>
           </Link>
-          <div className="flex items-center gap-5 text-[12.5px] font-semibold text-gray-500">
-            <a href="#features" className="hover:text-gray-900 transition">Platform</a>
-            <Link href="/pricing" className="hover:text-gray-900 transition">Upgrade</Link>
-            <Link href="/register/company" className="hover:text-gray-900 transition">For brands</Link>
+          <div className="flex items-center gap-6 text-caption font-mono font-semibold uppercase text-muted">
+            <a href="#features" className="hover:text-ink transition">Platform</a>
+            <Link href="/pricing" className="hover:text-ink transition">Upgrade</Link>
+            <Link href="/register/company" className="hover:text-ink transition">For brands</Link>
           </div>
-          <div className="md:ml-auto text-[11.5px] text-gray-400">
-            © {new Date().getFullYear()} StreamLink · Built for streamers, by streamers.
+          <div className="md:ml-auto text-micro font-mono text-muted">
+            © {new Date().getFullYear()} · Built for streamers, by streamers
           </div>
         </div>
       </footer>
