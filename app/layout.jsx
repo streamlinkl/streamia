@@ -1,4 +1,5 @@
 import './globals.css'
+import SupportFab from '@/components/SupportFab'
 
 export const metadata = {
   metadataBase: new URL('https://streamia.co'),
@@ -44,7 +45,10 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className="bg-bg text-gray-900 font-sans antialiased">{children}</body>
+      <body className="bg-bg text-gray-900 font-sans antialiased">
+        {children}
+        <SupportFab />
+      </body>
     </html>
   )
 }
