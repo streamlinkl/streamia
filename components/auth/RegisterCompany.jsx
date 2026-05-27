@@ -17,6 +17,15 @@ const PARTNERSHIP_TYPES = [
   'Event Coverage', 'Long-term Deals', 'Affiliate Programs'
 ]
 
+// docx task #2 sub-categories. Token order matches backend zod enum.
+const AGENCY_TYPES = [
+  { key: 'influencer', label: 'Influencer Agency' },
+  { key: 'streamer',   label: 'Streamer Agency' },
+  { key: 'affiliate',  label: 'Affiliate Agency' },
+  { key: 'models',     label: 'Models Agency' },
+  { key: 'marketing',  label: 'Marketing Agency' },
+]
+
 const STEPS = ['Account', 'Company', 'Partnerships', 'Done']
 
 function slugify(name) {
@@ -32,6 +41,8 @@ export default function RegisterCompanyPage() {
 
   const [form, setForm] = useState({
     // Step 1 — Account
+    account_type: 'brand',          // 'brand' | 'agency' — docx task #2
+    agency_type: 'influencer',      // one of AGENCY_TYPES keys; ignored when account_type='brand'
     email: '',
     password: '',
     contact_first_name: '',
@@ -79,17 +90,19 @@ export default function RegisterCompanyPage() {
         'brand'
       const tentativeHandle = (baseHandle + Date.now().toString(36)).slice(0, 20).toLowerCase()
 
+      const isAgency = form.account_type === 'agency'
       const fullName = [form.contact_first_name, form.contact_last_name].filter(Boolean).join(' ').trim()
       const result = await authApi.signup({
         email: form.email.trim(),
         password: form.password,
-        displayName: fullName || form.contact_name.trim() || 'Brand',
+        displayName: fullName || form.contact_name.trim() || (isAgency ? 'Agency' : 'Brand'),
         handle: tentativeHandle,
         firstName: form.contact_first_name.trim() || null,
         lastName: form.contact_last_name.trim() || null,
         country: form.country || undefined,
         language: 'en',
-        role: 'company',
+        role: isAgency ? 'agency' : 'company',
+        agencyType: isAgency ? form.agency_type : undefined,
       })
       await acceptSession(result)
       setStep(2)
@@ -185,8 +198,69 @@ export default function RegisterCompanyPage() {
         {/* ── STEP 1: Account ── */}
         {step === 1 && (
           <>
-            <h1 className="text-[22px] font-extrabold mb-1">Create brand account</h1>
-            <p className="text-sm text-gray-400 mb-5">Connect with thousands of streamers</p>
+            <h1 className="text-[22px] font-extrabold mb-1">
+              {form.account_type === 'agency' ? 'Create agency account' : 'Create brand account'}
+            </h1>
+            <p className="text-sm text-gray-400 mb-5">
+              {form.account_type === 'agency'
+                ? 'Manage talent and partnerships for your roster'
+                : 'Connect with thousands of streamers'}
+            </p>
+
+            {/* Account type selector (docx task #2) */}
+            <fieldset className="mb-4">
+              <legend className="block text-xs font-bold text-gray-500 mb-2">I'm signing up as a</legend>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { key: 'brand',  label: 'Brand',  hint: 'I run a company or product' },
+                  { key: 'agency', label: 'Agency', hint: 'I manage creators or talent' },
+                ].map((opt) => {
+                  const active = form.account_type === opt.key
+                  return (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => update('account_type', opt.key)}
+                      aria-pressed={active}
+                      className={`text-left px-3 py-2.5 rounded-xl border-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent
+                        ${active ? 'border-accent bg-accent/5' : 'border-gray-200 hover:border-gray-300'}`}
+                    >
+                      <div className="text-[13px] font-extrabold text-gray-900">{opt.label}</div>
+                      <div className="text-[11px] text-gray-500 mt-0.5">{opt.hint}</div>
+                    </button>
+                  )
+                })}
+              </div>
+            </fieldset>
+
+            {form.account_type === 'agency' && (
+              <fieldset className="mb-4">
+                <legend className="block text-xs font-bold text-gray-500 mb-2">What kind of agency?</legend>
+                <div className="grid grid-cols-1 gap-1.5">
+                  {AGENCY_TYPES.map((opt) => {
+                    const active = form.agency_type === opt.key
+                    return (
+                      <label
+                        key={opt.key}
+                        className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border cursor-pointer transition
+                          ${active ? 'border-accent bg-accent/5' : 'border-gray-200 hover:border-gray-300'}`}
+                      >
+                        <input
+                          type="radio"
+                          name="agency_type"
+                          value={opt.key}
+                          checked={active}
+                          onChange={() => update('agency_type', opt.key)}
+                          className="w-4 h-4 accent-accent"
+                        />
+                        <span className="text-[13px] font-semibold text-gray-800">{opt.label}</span>
+                      </label>
+                    )
+                  })}
+                </div>
+              </fieldset>
+            )}
+
             <form onSubmit={handleStep1} className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
