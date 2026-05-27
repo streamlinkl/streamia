@@ -84,127 +84,115 @@ export default function Page() {
 
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-24 -left-20 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
-          <div className="absolute top-1/3 -right-24 w-[28rem] h-[28rem] bg-violet-200/40 rounded-full blur-3xl" />
-        </div>
-
-        <div className="relative max-w-6xl mx-auto px-6 pt-20 pb-24 grid lg:grid-cols-[1.05fr_1fr] gap-14 items-center">
+        <div className="relative max-w-6xl mx-auto px-6 pt-16 sm:pt-20 pb-20 sm:pb-24 grid lg:grid-cols-[1.05fr_1fr] gap-12 lg:gap-14 items-center">
           <div>
-            <div className="inline-flex items-center gap-2 pl-2 pr-3 py-1.5 bg-white border border-gray-200 rounded-full text-[11.5px] font-bold uppercase tracking-wider text-gray-700 shadow-sm">
-              <span className="inline-flex items-center justify-center w-5 h-5 bg-accent-lt text-accent rounded-full">
+            <div className="inline-flex items-center gap-2 pl-1.5 pr-3 py-1 border border-rule rounded-full text-micro font-mono font-semibold uppercase text-muted bg-paper">
+              <span className="inline-flex items-center justify-center w-5 h-5 bg-accent text-white rounded-full" aria-hidden>
                 <Radio className="w-3 h-3" strokeWidth={2.5} />
               </span>
               Built for livestreamers
             </div>
 
-            <h1 className="text-[44px] md:text-[56px] font-extrabold leading-[1.05] tracking-tight mt-6">
-              The professional<br />
-              <span className="bg-gradient-to-r from-accent to-violet-500 bg-clip-text text-transparent">home for streamers.</span>
+            <h1 className="font-display text-h2-lg sm:text-display md:text-display-lg text-ink mt-6 font-medium">
+              The professional{' '}
+              <em className="not-italic md:italic text-accent-dk font-medium">home</em>{' '}
+              for streamers.
             </h1>
-            <p className="text-[15.5px] text-gray-500 leading-relaxed mt-5 max-w-lg">
+            <p className="text-lede text-muted mt-5 max-w-lg">
               Connect with top streamers, land brand deals, find collaborators and track your growth — all in one professional network built for creators.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 mt-8">
-              <Link href="/register" className="group inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-900 hover:bg-black text-white font-bold rounded-full transition shadow-sm">
+              <Link href="/register" className="group inline-flex items-center justify-center gap-2 px-6 py-3 bg-ink hover:bg-black text-white font-semibold rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white">
                 Create your free profile
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" strokeWidth={2.25} aria-hidden />
               </Link>
-              <Link href="/login" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-gray-200 hover:border-gray-400 text-gray-700 font-semibold rounded-full transition">
+              <Link href="/login" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-rule hover:border-ink text-ink font-semibold rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white">
                 Explore the feed
               </Link>
             </div>
 
-            <div className="mt-7 flex items-center gap-2 text-[12.5px] text-gray-500">
-              <Check className="w-4 h-4 text-emerald-500" strokeWidth={3} />
-              <span>Free forever for streamers</span>
-              <span className="mx-1 text-gray-300">·</span>
-              <Check className="w-4 h-4 text-emerald-500" strokeWidth={3} />
-              <span>No credit card required</span>
+            <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-caption text-muted">
+              <span className="inline-flex items-center gap-1.5">
+                <Check className="w-4 h-4 text-emerald-600" strokeWidth={3} aria-hidden />
+                Free forever for streamers
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Check className="w-4 h-4 text-emerald-600" strokeWidth={3} aria-hidden />
+                No credit card required
+              </span>
             </div>
 
-            <div className="mt-10 pt-8 border-t border-gray-100">
-              <div className="text-[10.5px] font-extrabold text-gray-400 uppercase tracking-[0.15em] mb-3">Works with your platforms</div>
+            <div className="mt-10 pt-8 border-t border-rule">
+              <div className="text-micro font-mono font-semibold uppercase text-muted mb-3">Works with your platforms</div>
               <div className="flex flex-wrap items-center gap-2">
                 {[
                   { Mark: TwitchMark, name: 'Twitch', cls: 'text-[#9146FF]' },
                   { Mark: KickMark, name: 'Kick', cls: 'text-[#53FC18]' },
                   { Mark: YouTubeMark, name: 'YouTube', cls: 'text-[#FF0033]' },
                 ].map(({ Mark, name, cls }) => (
-                  <div key={name} className="inline-flex items-center gap-2 pl-2.5 pr-3.5 py-1.5 bg-white border border-gray-200 rounded-full text-[12px] font-bold text-gray-700">
+                  <div key={name} className="inline-flex items-center gap-2 pl-2.5 pr-3.5 py-1.5 border border-rule rounded-full text-caption font-semibold text-ink bg-paper">
                     <Mark className={`w-3.5 h-3.5 ${cls}`} />
                     {name}
                   </div>
                 ))}
               </div>
             </div>
-
-            <div className="flex gap-10 mt-9 pt-8 border-t border-gray-100">
-              {[
-                ['42,000+', 'Streamers'],
-                ['8,300',   'Live right now'],
-                ['$2.4M',   'Deals closed'],
-              ].map(([n, l]) => (
-                <div key={l}>
-                  <div className="text-[24px] font-extrabold tracking-tight">{n}</div>
-                  <div className="text-[11.5px] text-gray-400 mt-0.5 font-semibold">{l}</div>
-                </div>
-              ))}
-            </div>
           </div>
 
-          {/* Preview cards */}
+          {/* Preview cards — editorial flat with hairline borders */}
           <div className="relative">
-            <div className="absolute inset-4 bg-gradient-to-br from-accent/5 via-violet-100/40 to-transparent rounded-3xl -z-10" />
             <div className="grid grid-cols-6 gap-3">
-              <div className="col-span-6 bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_4px_20px_-6px_rgba(15,23,42,0.08)]">
+              <div className="col-span-6 bg-paper border border-rule rounded-2xl p-5 shadow-card">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-600 to-purple-700 flex items-center justify-center text-white font-bold text-xs shadow-sm">SV</div>
+                  <div className="w-10 h-10 rounded-full bg-ink flex items-center justify-center text-white font-mono font-semibold text-[11px]">SV</div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[13px] font-extrabold truncate">ShadowViper</span>
-                      <BadgeCheck className="w-4 h-4 text-sky-500" fill="currentColor" strokeWidth={0} />
+                      <span className="text-caption font-bold text-ink truncate">ShadowViper</span>
+                      <BadgeCheck className="w-4 h-4 text-sky-500" fill="currentColor" strokeWidth={0} aria-hidden />
                     </div>
-                    <div className="text-[10.5px] text-gray-400 font-semibold">Twitch Partner · Horror games</div>
+                    <div className="text-micro font-mono text-muted">Twitch Partner · Horror games</div>
                   </div>
-                  <div className="text-[10px] bg-rose-50 text-rose-600 font-extrabold px-2 py-0.5 rounded-full tracking-wider">LIVE</div>
+                  <div className="inline-flex items-center gap-1 text-micro font-mono font-bold text-live uppercase">
+                    <span className="w-1.5 h-1.5 rounded-full bg-live animate-pulse" aria-hidden />
+                    Live
+                  </div>
                 </div>
-                <p className="text-[13px] text-gray-700 leading-relaxed">
-                  Just hit <strong className="text-gray-900">100,000 followers</strong> on Twitch! 3 years of late nights and horror games finally paid off.
+                <p className="text-caption text-ink/80 leading-relaxed">
+                  Just hit <strong className="text-ink">100,000 followers</strong> on Twitch! 3 years of late nights and horror games finally paid off.
                 </p>
-                <div className="flex items-center gap-5 mt-4 pt-3 border-t border-gray-100 text-gray-500">
-                  <div className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold"><Heart className="w-3.5 h-3.5" strokeWidth={2.25} /> 3.2K</div>
-                  <div className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold"><MessageCircle className="w-3.5 h-3.5" strokeWidth={2.25} /> 847</div>
-                  <div className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold ml-auto"><Share2 className="w-3.5 h-3.5" strokeWidth={2.25} /> Share</div>
+                <div className="flex items-center gap-5 mt-4 pt-3 border-t border-rule text-muted">
+                  <div className="inline-flex items-center gap-1.5 text-caption font-medium"><Heart className="w-3.5 h-3.5" strokeWidth={2} aria-hidden /> 3.2K</div>
+                  <div className="inline-flex items-center gap-1.5 text-caption font-medium"><MessageCircle className="w-3.5 h-3.5" strokeWidth={2} aria-hidden /> 847</div>
+                  <div className="inline-flex items-center gap-1.5 text-caption font-medium ml-auto"><Share2 className="w-3.5 h-3.5" strokeWidth={2} aria-hidden /> Share</div>
                 </div>
               </div>
 
-              <div className="col-span-3 bg-white border border-gray-200 rounded-2xl p-4 shadow-[0_4px_20px_-6px_rgba(15,23,42,0.08)]">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-[10px]">NX</div>
+              <div className="col-span-3 bg-paper border border-rule rounded-2xl p-4 shadow-card">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-full bg-ink flex items-center justify-center text-white font-mono font-semibold text-[10px]">NX</div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[12px] font-extrabold truncate">NeonXtra</div>
-                    <div className="flex items-center gap-1 text-[10px] text-gray-400 font-semibold">
+                    <div className="text-caption font-bold text-ink truncate">NeonXtra</div>
+                    <div className="flex items-center gap-1 text-micro font-mono text-muted">
                       <KickMark className="w-3 h-3 text-[#53FC18]" />
                       Kick · FPS
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 px-2.5 py-1.5 bg-violet-50 rounded-lg">
-                  <Handshake className="w-3.5 h-3.5 text-violet-600" strokeWidth={2.25} />
-                  <span className="text-[11.5px] font-semibold text-violet-700">Looking for duo collab</span>
+                <div className="flex items-center gap-2 px-2.5 py-1.5 bg-accent-lt rounded-lg">
+                  <Handshake className="w-3.5 h-3.5 text-accent-dk" strokeWidth={2} aria-hidden />
+                  <span className="text-caption font-semibold text-accent-dk">Looking for duo collab</span>
                 </div>
               </div>
 
-              <div className="col-span-3 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 shadow-[0_4px_20px_-6px_rgba(15,23,42,0.08)]">
-                <div className="inline-flex items-center gap-1 text-[9.5px] font-extrabold text-amber-700 uppercase tracking-wider bg-amber-100/60 px-2 py-0.5 rounded-full mb-2">
-                  <DollarSign className="w-3 h-3" strokeWidth={2.5} />
+              <div className="col-span-3 bg-ink text-white border border-ink rounded-2xl p-4 shadow-card relative overflow-hidden">
+                <div className="inline-flex items-center gap-1 text-micro font-mono font-bold uppercase text-amber-300 mb-3">
+                  <DollarSign className="w-3 h-3" strokeWidth={2.5} aria-hidden />
                   Brand deal
                 </div>
-                <div className="text-[13px] font-extrabold">RedBull Gaming</div>
-                <div className="text-[11px] text-gray-600 mt-0.5">FPS streamers 50K+ followers</div>
-                <div className="text-[13px] font-extrabold text-amber-700 mt-2">$2,500 <span className="text-[10px] font-semibold text-amber-600">/ stream</span></div>
+                <div className="text-caption font-bold">RedBull Gaming</div>
+                <div className="text-micro font-mono text-white/60 mt-0.5">FPS · 50K+ followers</div>
+                <div className="font-display text-[28px] leading-none tracking-tight mt-3">$2,500<span className="text-micro font-mono text-white/60 ml-1.5">/stream</span></div>
               </div>
             </div>
           </div>
@@ -224,7 +212,7 @@ export default function Page() {
       </section>
 
       {/* Features */}
-      <section id="features" className="py-24">
+      <section id="features" className="py-24 scroll-mt-20">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent-lt text-accent rounded-full text-[11px] font-extrabold uppercase tracking-wider mb-4">
             <Sparkles className="w-3.5 h-3.5" strokeWidth={2.5} />
@@ -247,7 +235,7 @@ export default function Page() {
       </section>
 
       {/* For brands band */}
-      <section id="brands" className="py-20 bg-gray-900 text-white relative overflow-hidden">
+      <section id="brands" className="py-20 bg-gray-900 text-white relative overflow-hidden scroll-mt-20">
         <div className="absolute inset-0 opacity-[0.07] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
         <div className="relative max-w-5xl mx-auto px-6 grid md:grid-cols-[1.15fr_1fr] gap-12 items-center">
           <div>
