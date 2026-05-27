@@ -33,7 +33,7 @@ module.exports = {
         ink:    '#0A0A0A',
         paper:  '#FAFAF7',
         rule:   '#E6E4DC',
-        muted:  '#6B6960',
+        muted:  '#585650',
         // Existing palette (do not remove — used across login/pricing/feed/etc.):
         accent: '#6C63FF',
         'accent-lt': '#f0efff',

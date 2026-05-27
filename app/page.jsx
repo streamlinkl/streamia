@@ -58,12 +58,13 @@ const BRAND_BULLETS = [
 export default function Page() {
   return (
     <div className="min-h-screen bg-white font-sans text-ink">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-ink focus:text-white focus:rounded-full focus:font-semibold focus:text-caption">Skip to content</a>
       {/* Nav */}
-      <nav className="sticky top-0 z-40 bg-paper/85 backdrop-blur border-b border-rule">
+      <nav aria-label="Main" className="sticky top-0 z-40 bg-paper/85 backdrop-blur border-b border-rule">
         <div className="max-w-6xl mx-auto h-16 flex items-center px-6">
           <Link href="/" className="flex items-center gap-2 text-[17px] font-bold tracking-tight text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-md">
             <span className="w-9 h-9 bg-ink rounded-xl flex items-center justify-center text-white" aria-hidden>
-              <Zap className="w-4 h-4" strokeWidth={2.5} />
+              <Zap className="w-4 h-4" strokeWidth={2.5} aria-hidden />
             </span>
             Stream<span className="text-accent">Link</span>
           </Link>
@@ -82,8 +83,9 @@ export default function Page() {
         </div>
       </nav>
 
+      <main id="main-content">
       {/* Hero */}
-      <section className="relative overflow-hidden">
+      <section aria-label="Hero" className="relative overflow-hidden">
         <div className="relative max-w-6xl mx-auto px-6 pt-16 sm:pt-20 pb-20 sm:pb-24 grid lg:grid-cols-[1.05fr_1fr] gap-12 lg:gap-14 items-center">
           <div>
             <div className="inline-flex items-center gap-2 pl-1.5 pr-3 py-1 border border-rule rounded-full text-micro font-mono font-semibold uppercase text-muted bg-paper">
@@ -243,10 +245,10 @@ export default function Page() {
               <span className="w-6 h-px bg-white/40" aria-hidden />
               For brands &amp; agencies
             </div>
-            <h3 className="font-display text-h2 sm:text-h2-lg text-white leading-tight">
+            <h2 className="font-display text-h2 sm:text-h2-lg text-white leading-tight">
               Find verified creators.<br />
               <em className="italic text-white/70 font-medium">Run campaigns that convert.</em>
-            </h3>
+            </h2>
             <p className="text-white/60 mt-5 max-w-md text-lede leading-relaxed">
               Post deals, discover niche-perfect streamers, and track applications in one workspace. Replace spreadsheets and cold outreach with a proper platform.
             </p>
@@ -293,20 +295,22 @@ export default function Page() {
         </div>
       </section>
 
+      </main>
+
       {/* Footer */}
       <footer className="border-t border-rule bg-paper">
         <div className="max-w-6xl mx-auto px-6 py-12 flex flex-col md:flex-row items-start md:items-center gap-6">
           <Link href="/" className="flex items-center gap-2 text-[15px] font-bold tracking-tight text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-md">
             <span className="w-8 h-8 bg-ink rounded-lg flex items-center justify-center text-white" aria-hidden>
-              <Zap className="w-3.5 h-3.5" strokeWidth={2.5} />
+              <Zap className="w-3.5 h-3.5" strokeWidth={2.5} aria-hidden />
             </span>
             Stream<span className="text-accent">Link</span>
           </Link>
-          <div className="flex items-center gap-6 text-caption font-mono font-semibold uppercase text-muted">
-            <a href="#features" className="hover:text-ink transition">Platform</a>
-            <Link href="/pricing" className="hover:text-ink transition">Upgrade</Link>
-            <Link href="/register/company" className="hover:text-ink transition">For brands</Link>
-          </div>
+          <nav aria-label="Footer" className="flex items-center gap-6 text-caption font-mono font-semibold uppercase text-muted">
+            <a href="#features" className="hover:text-ink transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm">Platform</a>
+            <Link href="/pricing" className="hover:text-ink transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm">Upgrade</Link>
+            <Link href="/register/company" className="hover:text-ink transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm">For brands</Link>
+          </nav>
           <div className="md:ml-auto text-micro font-mono text-muted">
             © {new Date().getFullYear()} · Built for streamers, by streamers
           </div>
