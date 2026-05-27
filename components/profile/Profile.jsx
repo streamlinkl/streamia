@@ -10,6 +10,7 @@ import {
 import { connectionApi, followApi, postApi, profileApi, uploadFile } from '@/lib/api-client'
 import { useAuthStore, useAppStore } from '@/lib/store'
 import { formatDistanceToNow } from 'date-fns'
+import RoleBadge from '@/components/RoleBadge'
 
 const ImageCropModal = dynamic(() => import('@/components/ImageCropModal'), { ssr: false })
 
@@ -253,7 +254,10 @@ export default function Profile({ initialProfile, initialPosts = [], viewingOwn 
 
           {isOwnProfile && <StreamStatusPill profile={profile} setProfile={setProfile} />}
 
-          <h1 className="text-[20px] font-extrabold">{profile.displayName}</h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-[20px] font-extrabold">{profile.displayName}</h1>
+            <RoleBadge role={profile.role} size="sm" />
+          </div>
           <div className="flex items-center flex-wrap gap-x-1.5 text-[13px] text-gray-400 mb-2">
             <span>@{profile.handle}</span>
             {profile.category && <span>· {profile.category}</span>}

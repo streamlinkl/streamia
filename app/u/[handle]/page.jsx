@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowRight, BadgeCheck, Eye, MapPin, Users, Zap } from 'lucide-react'
 import { apiServer } from '@/lib/api-server'
+import RoleBadge from '@/components/RoleBadge'
 
 // 2-minute ISR — public profiles are read-heavy; this keeps avatar/banner
 // edits visible within a couple of minutes while still serving from the
@@ -95,10 +96,11 @@ export default async function PublicProfilePage({ params }) {
                   : initials}
               </div>
             </div>
-            <h1 className="text-[22px] font-extrabold inline-flex items-center gap-2">
+            <h1 className="text-[22px] font-extrabold inline-flex items-center gap-2 flex-wrap">
               {profile.displayName}
               {profile.isVerified && <BadgeCheck className="w-5 h-5 text-sky-500" fill="currentColor" strokeWidth={0} />}
               {profile.isLive && <span className="text-[10px] bg-rose-500 text-white font-black px-2 py-0.5 rounded-full">LIVE</span>}
+              <RoleBadge role={profile.role} size="sm" />
             </h1>
             <div className="flex items-center flex-wrap gap-x-1.5 text-[13px] text-gray-400 mb-2">
               <span>@{profile.handle}</span>
