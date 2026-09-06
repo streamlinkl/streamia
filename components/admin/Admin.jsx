@@ -272,10 +272,52 @@ function ModerationTab({ showToast }) {
 function BillingTab({ showToast }) {
   return (
     <div className="space-y-6">
+      <MobilePurchasePanel showToast={showToast} />
       <PlansEditor showToast={showToast} />
       <PaymentsPanel showToast={showToast} />
       <DisputesPanel showToast={showToast} />
     </div>
+  )
+}
+
+// Which purchase path the mobile app offers. 'web' = plans are bought here on
+// the site and the app only shows/manages them; 'iap' = App Store / Google Play
+// via RevenueCat. Flippable without a deploy (App Review can require it).
+function MobilePurchasePanel({ showToast }) {
+  const [mode, setMode] = useState(null)
+  const [saving, setSaving] = useState(false)
+  useEffect(() => {
+    adminApi.settings()
+      .then((r) => setMode(r?.settings?.['billing.purchaseMode'] ?? 'web'))
+      .catch((e) => showToast(e.message || 'Failed to load settings', 'error'))
+  }, [])
+  const save = async (next) => {
+    setSaving(true)
+    try {
+      await adminApi.updateSetting('billing.purchaseMode', next)
+      setMode(next)
+      showToast(`Mobile purchases: ${next === 'iap' ? 'App Store / Google Play' : 'web only'}`)
+    } catch (e) {
+      showToast(e.message || 'Could not save', 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+  return (
+    <SectionCard title="Mobile purchases" hint="How the iOS / Android app sells plans. 'Web only' shows plan status in the app and sends people here to buy; 'In-app (IAP)' uses Apple / Google billing through RevenueCat.">
+      <div className="px-5 py-4 flex flex-wrap gap-2">
+        {[
+          { value: 'web', label: 'Web only' },
+          { value: 'iap', label: 'In-app (IAP)' },
+        ].map((opt) => (
+          <button key={opt.value} onClick={() => save(opt.value)} disabled={saving || mode === null}
+            className={`px-4 h-9 rounded-full text-[12.5px] font-bold border transition disabled:opacity-60
+              ${mode === opt.value ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-gray-600 hover:border-gray-400'}`}>
+            {opt.label}
+          </button>
+        ))}
+      </div>
+    </SectionCard>
   )
 }
 
