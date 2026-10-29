@@ -1,371 +1,238 @@
 'use client'
-import { useState } from 'react'
-import { Link, useNavigate } from '@/lib/router-shim'
-import { ArrowRight, Building2, Loader2, Sparkles, Tv } from 'lucide-react'
+// Creator signup (Figma "StreamLink | Landing Login" → Aprovado, Oct 2026).
+//   /register                 → "What describes you best?" account-type cards
+//   /register?type=streamer   → Streamer form
+//   /register?type=influencer → Influencer form
+// Brand / company signup lives at /register/company.
+import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { ArrowRight, Briefcase, User, Video } from 'lucide-react'
 import { authApi, profileApi } from '@/lib/api-client'
 import { useAuthStore } from '@/lib/store'
-import PlatformPicker from '@/components/PlatformPicker'
-import ImageUpload from '@/components/ImageUpload'
 import { COUNTRIES, LANGUAGES } from '@/lib/countries'
+import {
+  EMAIL_RE, INFLUENCER_NICHES, STREAMER_CATEGORIES, STREAMER_PLATFORMS,
+  generateHandle, localeDefaults, safeNext,
+} from '@/lib/signup'
+import {
+  ChipGroup, Eyebrow, FormAlert, FormTitle, PrimaryButton, ROLE_COLORS,
+  SelectField, SignupShell, TextArea, TextField,
+} from '@/components/auth/AuthUI'
 
-export const INFLUENCER_CATEGORIES = [
-  'Fashion & Style',
-  'Beauty',
-  'Fitness & Wellness',
-  'Lifestyle',
-  'Travel',
-  'Food & Drinks',
-  'Tech & AI',
-  'Finance & Business',
-  'Entertainment',
-  'Gaming',
-  'Education / Niche Knowledge',
-  'Dating & Relationships',
-  'Adult Content',
+const ACCOUNT_TYPES = [
+  {
+    key: 'streamer', title: 'Streamer', Icon: Video, href: '/register?type=streamer',
+    text: 'You create live content on Twitch, YouTube Live, Kick, or other platforms.',
+  },
+  {
+    key: 'influencer', title: 'Influencer', Icon: User, href: '/register?type=influencer',
+    text: 'You create content on Instagram, TikTok, YouTube, or other social platforms.',
+  },
+  {
+    key: 'brand', title: 'Brand or Company', Icon: Briefcase, href: '/register/company',
+    text: 'You represent a brand or agency looking to connect with creators.',
+  },
 ]
 
-export default function RegisterPage() {
-  const navigate = useNavigate()
+function AccountTypeSelect() {
+  return (
+    <SignupShell backHref="/login" wide>
+      <div className="text-center">
+        <div className="text-[11.5px] leading-[17px] font-bold uppercase tracking-[0.18em] text-black/80">Create your account</div>
+        <h1 className="pt-3 font-trap font-extrabold text-[34px] leading-[40px] sm:text-[46px] sm:leading-[51px] text-black">What describes you best?</h1>
+        <p className="pt-3 text-[15px] sm:text-[16px] leading-[26px] text-black/70">Choose the profile type that fits your role on StreamLink.</p>
+      </div>
+      <div className="pt-10 sm:pt-12 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {ACCOUNT_TYPES.map(({ key, title, Icon, href, text }) => {
+          const color = ROLE_COLORS[key]
+          return (
+            <Link
+              key={key}
+              href={href}
+              className="group flex flex-col p-7 sm:p-8 sm:min-h-[286px] rounded-[20px] border-2 border-black/[0.08] bg-white transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-24px_rgba(10,10,10,0.35)]">
+              <span className="w-10 h-10 rounded-[10px] bg-black/[0.04] flex items-center justify-center mb-5">
+                <Icon className="w-6 h-6" style={{ color }} strokeWidth={1.6} aria-hidden />
+              </span>
+              <span className="font-trap font-bold text-[18px] leading-[27px] text-black pb-2">{title}</span>
+              <span className="text-[13px] leading-[21px] text-black/65">{text}</span>
+              <span className="mt-auto pt-6 inline-flex items-center gap-1.5 text-[12px] font-bold" style={{ color }}>
+                Get started
+                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" strokeWidth={1.8} aria-hidden />
+              </span>
+            </Link>
+          )
+        })}
+      </div>
+    </SignupShell>
+  )
+}
+
+const COPY = {
+  streamer: {
+    eyebrow: 'Streamer',
+    subtitle: 'Tell us about you and your streaming career.',
+    first: 'Alex', last: 'Rivera', email: 'alex@example.com',
+    bio: 'Tell brands what makes you stand out…',
+  },
+  influencer: {
+    eyebrow: 'Influencer',
+    subtitle: 'Tell us what content you create.',
+    first: 'Jordan', last: 'Kim', email: 'jordan@example.com',
+    bio: 'Tell brands what makes you unique…',
+  },
+}
+
+function CreatorForm({ type }) {
+  const router = useRouter()
+  const params = useSearchParams()
   const acceptSession = useAuthStore((s) => s.acceptSession)
-  const [accountType, setAccountType] = useState(null) // null | 'streamer' | 'influencer'
-  const [loading, setLoading] = useState(false)
-  const [errorMsg, setErrorMsg] = useState('')
+  const copy = COPY[type]
+  const color = ROLE_COLORS[type]
+  const isInfluencer = type === 'influencer'
+
   const [form, setForm] = useState({
-    email: '', password: '',
-    first_name: '', last_name: '',
-    display_name: '', handle: '',
-    bio: '', category: '',
+    firstName: '', lastName: '', email: '', password: '',
     country: 'TR', language: 'en',
-    platforms: [],
-    contentCategories: [],
-    avatar_url: '',
+    platforms: [], category: '', niches: [], bio: '',
   })
+  const [errors, setErrors] = useState({})
+  const [alert, setAlert] = useState('')
+  const [loading, setLoading] = useState(false)
+  const touchedLocale = useRef(false)
 
-  const isInfluencer = accountType === 'influencer'
+  // Preselect country/language from the browser locale after mount (doing it
+  // during render made the server and client disagree → hydration flicker).
+  useEffect(() => {
+    if (touchedLocale.current) return
+    const d = localeDefaults(COUNTRIES, LANGUAGES)
+    setForm((f) => ({ ...f, country: d.country, language: d.language }))
+  }, [])
 
-  const toggleCategory = (cat) => {
-    setForm((f) => ({
-      ...f,
-      contentCategories: f.contentCategories.includes(cat)
-        ? f.contentCategories.filter((c) => c !== cat)
-        : [...f.contentCategories, cat],
-    }))
+  const set = (k) => (v) => {
+    if (k === 'country' || k === 'language') touchedLocale.current = true
+    setForm((f) => ({ ...f, [k]: v }))
+    setErrors((e) => (e[k] ? { ...e, [k]: undefined } : e))
+    setAlert('')
+  }
+  const onInput = (k) => (e) => set(k)(e.target.value)
+  const toggle = (k) => (v) => set(k)(form[k].includes(v) ? form[k].filter((x) => x !== v) : [...form[k], v])
+
+  function validate() {
+    const e = {}
+    if (!form.firstName.trim()) e.firstName = 'First name is required'
+    if (!form.lastName.trim()) e.lastName = 'Last name is required'
+    if (!form.email.trim()) e.email = 'Email is required'
+    else if (!EMAIL_RE.test(form.email.trim())) e.email = 'Enter a valid email address'
+    if (!form.password) e.password = 'Password is required'
+    else if (form.password.length < 8) e.password = 'Password must be at least 8 characters'
+    return e
   }
 
-  const handleRegister = async (e) => {
+  async function handleSubmit(e) {
     e.preventDefault()
-    setErrorMsg('')
-
-    if (form.handle.length < 3) {
-      setErrorMsg('Handle must be at least 3 characters')
+    const v = validate()
+    if (Object.keys(v).length) {
+      setErrors(v)
+      setAlert('Please fix the highlighted fields.')
+      window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
-    if (form.password.length < 8) {
-      setErrorMsg('Password must be at least 8 characters.')
-      return
-    }
-
     setLoading(true)
-
+    setAlert('')
+    const base = {
+      email: form.email.trim(),
+      password: form.password,
+      displayName: `${form.firstName.trim()} ${form.lastName.trim()}`.slice(0, 80),
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      country: form.country || undefined,
+      language: form.language || 'en',
+      role: isInfluencer ? 'influencer' : 'streamer',
+      platforms: isInfluencer ? [] : form.platforms,
+      contentCategories: isInfluencer ? form.niches : [],
+    }
     try {
-      const result = await authApi.signup({
-        email: form.email.trim(),
-        password: form.password,
-        displayName: form.display_name.trim(),
-        handle: form.handle.toLowerCase(),
-        firstName: form.first_name.trim() || null,
-        lastName: form.last_name.trim() || null,
-        country: form.country || undefined,
-        language: form.language || 'en',
-        role: isInfluencer ? 'influencer' : 'streamer',
-        platforms: isInfluencer ? [] : form.platforms,
-        contentCategories: isInfluencer ? form.contentCategories : [],
-      })
+      // The handle is generated (the form doesn't ask for one); retry on the
+      // rare collision with a fresh random suffix.
+      let result
+      for (let attempt = 0; ; attempt++) {
+        try {
+          result = await authApi.signup({ ...base, handle: generateHandle(form.firstName, form.lastName, form.email) })
+          break
+        } catch (err) {
+          if (err.code !== 'HANDLE_TAKEN' || attempt >= 2) throw err
+        }
+      }
       await acceptSession(result)
 
-      // Patch fields that don't fit the signup body
       const patch = {}
-      if (form.bio) patch.bio = form.bio
-      if (form.category) patch.category = form.category
-      if (form.avatar_url) patch.avatarUrl = form.avatar_url
+      if (form.bio.trim()) patch.bio = form.bio.trim()
+      if (!isInfluencer && form.category) patch.category = form.category
       if (Object.keys(patch).length) {
-        try { await profileApi.updateMe(patch) } catch { /* non-fatal */ }
+        try { await profileApi.updateMe(patch) } catch { /* non-fatal — editable in Settings */ }
       }
-
-      navigate('/feed', { replace: true })
+      router.replace(safeNext(params.get('next')))
     } catch (err) {
-      if (err.code === 'EMAIL_TAKEN') setErrorMsg('This email is already registered. Try signing in instead.')
-      else if (err.code === 'HANDLE_TAKEN') setErrorMsg('That handle is already taken. Please choose another.')
-      else if (err.code === 'VALIDATION_ERROR') setErrorMsg('Please check your inputs and try again.')
-      else setErrorMsg(err.message || 'Something went wrong. Please try again.')
+      if (err.code === 'EMAIL_TAKEN') {
+        setErrors({ email: 'This email is already registered' })
+        setAlert('This email is already registered. Try signing in instead.')
+      } else if (err.code === 'VALIDATION_ERROR') {
+        const fe = err.details?.fieldErrors || {}
+        const mapped = { email: fe.email?.[0], password: fe.password?.[0], firstName: fe.firstName?.[0], lastName: fe.lastName?.[0] }
+        setErrors(mapped)
+        setAlert('Please check your details and try again.')
+      } else {
+        setAlert(err.message || 'Something went wrong. Please try again.')
+      }
       setLoading(false)
     }
   }
 
-  // Step 1 — pick account type
-  if (!accountType) {
-    return (
-      <div className="min-h-screen bg-bg flex items-center justify-center px-4 py-8">
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm w-full max-w-sm p-8">
-          <div className="mb-6">
-            <img src="/brand/logo-wordmark.svg" alt="StreamLink" className="h-7 w-auto" />
-          </div>
-          <h1 className="text-[22px] font-extrabold mb-1">Join StreamLink</h1>
-          <p className="text-sm text-gray-400 mb-6">How do you want to use StreamLink?</p>
-
-          <div className="space-y-3">
-            <button onClick={() => setAccountType('streamer')}
-              className="w-full p-4 border-2 border-gray-200 hover:border-accent hover:bg-accent-lt rounded-2xl text-left transition group">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-graduate-radial rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Tv className="w-6 h-6 text-white" strokeWidth={2.25} />
-                </div>
-                <div className="flex-1">
-                  <div className="font-extrabold text-[15px] group-hover:text-accent transition">I'm a Streamer</div>
-                  <div className="text-[12.5px] text-gray-400 mt-0.5">Find brand deals, connect with creators, grow your network</div>
-                </div>
-                <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-accent transition" strokeWidth={2.25} />
-              </div>
-              <div className="mt-2 ml-16">
-                <span className="text-[11px] bg-green-50 text-green-700 font-bold px-2 py-0.5 rounded-full">Always Free</span>
-              </div>
-            </button>
-
-            <button onClick={() => setAccountType('influencer')}
-              className="w-full p-4 border-2 border-gray-200 hover:border-pink-500 hover:bg-pink-50 rounded-2xl text-left transition group">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-rose-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="w-6 h-6 text-white" strokeWidth={2.25} />
-                </div>
-                <div className="flex-1">
-                  <div className="font-extrabold text-[15px] group-hover:text-pink-600 transition">I'm an Influencer</div>
-                  <div className="text-[12.5px] text-gray-400 mt-0.5">Pick your niches — fashion, beauty, lifestyle, tech and more</div>
-                </div>
-                <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-pink-500 transition" strokeWidth={2.25} />
-              </div>
-              <div className="mt-2 ml-16">
-                <span className="text-[11px] bg-green-50 text-green-700 font-bold px-2 py-0.5 rounded-full">Always Free</span>
-              </div>
-            </button>
-
-            <button onClick={() => navigate('/register/company')}
-              className="w-full p-4 border-2 border-gray-200 hover:border-purple-500 hover:bg-purple-50 rounded-2xl text-left transition group">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Building2 className="w-6 h-6 text-white" strokeWidth={2.25} />
-                </div>
-                <div className="flex-1">
-                  <div className="font-extrabold text-[15px] group-hover:text-purple-600 transition">I'm a Brand / Company</div>
-                  <div className="text-[12.5px] text-gray-400 mt-0.5">Post deals, find creators, run campaigns at scale</div>
-                </div>
-                <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-purple-500 transition" strokeWidth={2.25} />
-              </div>
-              <div className="mt-2 ml-16">
-                <span className="text-[11px] bg-purple-50 text-purple-700 font-bold px-2 py-0.5 rounded-full">Free + Paid plans</span>
-              </div>
-            </button>
-          </div>
-
-          <p className="text-center text-sm text-gray-400 mt-6">
-            Already have an account?{' '}
-            <Link to="/login" className="text-accent font-semibold hover:underline">Sign in</Link>
-          </p>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-bg flex items-center justify-center px-4 py-8">
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm w-full max-w-sm p-8">
-        <div className="mb-5">
-          <img src="/brand/logo-wordmark.svg" alt="StreamLink" className="h-7 w-auto" />
+    <SignupShell backHref="/register">
+      <Eyebrow color={color}>{copy.eyebrow}</Eyebrow>
+      <FormTitle title="Create your profile" subtitle={copy.subtitle} />
+
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5 pt-10">
+        <FormAlert>{alert}</FormAlert>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-4">
+          <TextField id="firstName" label="First name" placeholder={copy.first} value={form.firstName} onChange={onInput('firstName')} error={errors.firstName} autoComplete="given-name" maxLength={80} />
+          <TextField id="lastName" label="Last name" placeholder={copy.last} value={form.lastName} onChange={onInput('lastName')} error={errors.lastName} autoComplete="family-name" maxLength={80} />
+        </div>
+        <TextField id="email" type="email" label="Email" placeholder={copy.email} value={form.email} onChange={onInput('email')} error={errors.email} autoComplete="email" autoCapitalize="none" />
+        <TextField id="password" type="password" label="Password" placeholder="At least 8 characters" value={form.password} onChange={onInput('password')} error={errors.password} autoComplete="new-password" />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-4">
+          <SelectField id="country" label="Country" value={form.country} onChange={set('country')} options={COUNTRIES.map((c) => ({ value: c.code, label: c.name }))} />
+          <SelectField id="language" label="Main language" value={form.language} onChange={set('language')} options={LANGUAGES.map((l) => ({ value: l.code, label: l.name }))} />
         </div>
 
-        <h1 className="text-2xl font-extrabold mb-1">Create your profile</h1>
-        <p className="text-sm text-gray-400 mb-5">
-          {isInfluencer ? 'Tell us what content you create' : 'Join 42,000+ streamers'}
-        </p>
-
-        {errorMsg && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-[12.5px] text-red-700 font-semibold leading-relaxed">
-            {errorMsg}
-          </div>
+        {isInfluencer ? (
+          <ChipGroup label="Content niches" hint="Select all that apply" options={INFLUENCER_NICHES} value={form.niches} onToggle={toggle('niches')} color={color} />
+        ) : (
+          <>
+            <ChipGroup label="Platforms" options={STREAMER_PLATFORMS.map((p) => ({ value: p.slug, label: p.label }))} value={form.platforms} onToggle={toggle('platforms')} color={color} />
+            <SelectField id="category" label="Category" placeholder="Select a category" value={form.category} onChange={set('category')} options={STREAMER_CATEGORIES} />
+          </>
         )}
 
-        <form onSubmit={handleRegister} className="flex flex-col gap-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">First name <span className="font-normal text-gray-300">(optional)</span></label>
-              <input type="text"
-                className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent focus:bg-white transition"
-                placeholder="Jordan"
-                value={form.first_name}
-                onChange={e => setForm({ ...form, first_name: e.target.value })}
-                autoComplete="given-name"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Last name <span className="font-normal text-gray-300">(optional)</span></label>
-              <input type="text"
-                className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent focus:bg-white transition"
-                placeholder="Rivera"
-                value={form.last_name}
-                onChange={e => setForm({ ...form, last_name: e.target.value })}
-                autoComplete="family-name"
-              />
-            </div>
-          </div>
+        <TextArea id="bio" label="Bio" placeholder={copy.bio} value={form.bio} onChange={onInput('bio')} maxLength={500} />
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Display Name</label>
-              <input required type="text"
-                className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent focus:bg-white transition"
-                placeholder="ArcherKnight"
-                value={form.display_name}
-                onChange={e => setForm({ ...form, display_name: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Handle</label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">@</span>
-                <input required type="text"
-                  className="w-full h-10 bg-bg border border-gray-200 rounded-lg pl-6 pr-3 text-sm outline-none focus:border-accent focus:bg-white transition"
-                  placeholder="archerknight"
-                  value={form.handle}
-                  onChange={e => setForm({ ...form, handle: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') })}
-                />
-              </div>
-            </div>
-          </div>
+        <PrimaryButton loading={loading} loadingLabel="Creating your profile…">Create my profile</PrimaryButton>
+      </form>
 
-          <div>
-            <label className="block text-xs font-bold text-gray-500 mb-1">Email</label>
-            <input required type="email"
-              className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent focus:bg-white transition"
-              placeholder="you@example.com"
-              value={form.email}
-              onChange={e => setForm({ ...form, email: e.target.value })}
-              autoComplete="email"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-gray-500 mb-1">Password</label>
-            <input required type="password" minLength={8}
-              className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent focus:bg-white transition"
-              placeholder="At least 8 characters"
-              value={form.password}
-              onChange={e => setForm({ ...form, password: e.target.value })}
-              autoComplete="new-password"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Country</label>
-              <select
-                className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent focus:bg-white transition"
-                value={form.country}
-                onChange={e => setForm({ ...form, country: e.target.value })}
-              >
-                {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Language</label>
-              <select
-                className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent focus:bg-white transition"
-                value={form.language}
-                onChange={e => setForm({ ...form, language: e.target.value })}
-              >
-                {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-gray-500 mb-2">Profile Photo <span className="font-normal text-gray-300">(optional)</span></label>
-            <ImageUpload
-              kind="avatar"
-              value={form.avatar_url}
-              onChange={(url) => setForm({ ...form, avatar_url: url })}
-              label="Upload photo"
-            />
-          </div>
-
-          {isInfluencer ? (
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-2">Your Content Niches</label>
-              <div className="grid grid-cols-2 gap-2">
-                {INFLUENCER_CATEGORIES.map((cat) => {
-                  const active = form.contentCategories.includes(cat)
-                  return (
-                    <button key={cat} type="button" onClick={() => toggleCategory(cat)}
-                      className={`text-left py-2 px-3 rounded-xl border text-[12px] font-bold transition
-                        ${active ? 'border-pink-500 bg-pink-50 text-pink-700' : 'border-gray-200 text-gray-500 hover:border-gray-400'}`}>
-                      {cat}
-                    </button>
-                  )
-                })}
-              </div>
-              {form.contentCategories.length === 0 && (
-                <div className="text-[10.5px] text-gray-400 mt-1.5">Pick at least one category to get matched with brands.</div>
-              )}
-            </div>
-          ) : (
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-2">Your Streaming Platforms</label>
-              <PlatformPicker
-                value={form.platforms}
-                onChange={(slugs) => setForm({ ...form, platforms: slugs })}
-              />
-            </div>
-          )}
-
-          {!isInfluencer && (
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Content Category</label>
-              <input type="text"
-                className="w-full h-10 bg-bg border border-gray-200 rounded-lg px-3 text-sm outline-none focus:border-accent focus:bg-white transition"
-                placeholder="e.g. FPS, Just Chatting, Music…"
-                value={form.category}
-                onChange={e => setForm({ ...form, category: e.target.value })}
-              />
-            </div>
-          )}
-
-          <div>
-            <label className="block text-xs font-bold text-gray-500 mb-1">Bio</label>
-            <textarea rows={2}
-              className="w-full bg-bg border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-accent focus:bg-white transition resize-none"
-              placeholder={isInfluencer ? 'Tell brands about yourself…' : 'Tell other streamers about yourself…'}
-              value={form.bio}
-              onChange={e => setForm({ ...form, bio: e.target.value })}
-            />
-          </div>
-
-          <button type="submit" disabled={loading}
-            className="w-full h-11 btn-gradient focus:ring-2 focus:ring-accent-pink/40 text-white font-bold rounded-full text-sm transition mt-1 disabled:opacity-60 flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2.5} />
-                Creating profile…
-              </>
-            ) : (
-              <>Create my profile <ArrowRight className="w-4 h-4" strokeWidth={2.5} /></>
-            )}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-gray-400 mt-4">
-          Already have an account?{' '}
-          <Link to="/login" className="text-accent font-semibold hover:underline">Sign in</Link>
-        </p>
-      </div>
-    </div>
+      <p className="pt-6 text-center text-[13px] text-black/50">
+        Already have an account?{' '}
+        <Link href="/login" className="font-semibold text-black hover:underline">Sign in</Link>
+      </p>
+    </SignupShell>
   )
+}
+
+export default function RegisterPage() {
+  const type = useSearchParams().get('type')
+  if (type === 'streamer' || type === 'influencer') return <CreatorForm key={type} type={type} />
+  return <AccountTypeSelect />
 }

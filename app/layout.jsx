@@ -1,6 +1,6 @@
 import './globals.css'
 import SupportFab from '@/components/SupportFab'
-import { Epilogue, Hanken_Grotesk, JetBrains_Mono } from 'next/font/google'
+import { Epilogue, Hanken_Grotesk, Inter, JetBrains_Mono, Sen } from 'next/font/google'
 
 // Display: Epilogue — modern variable grotesk with true italics for hero
 // headlines. Replaces Fraunces (serif) to better fit the contemporary,
@@ -24,6 +24,23 @@ const fontMono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
   display: 'swap',
+})
+
+// Login / signup redesign (Oct 2026, Figma "StreamLink | Landing Login"):
+// Sen for the signup forms, Inter for the login card + hero copy. Only the
+// auth pages use them, so they aren't preloaded on every route.
+const fontSen = Sen({
+  subsets: ['latin', 'latin-ext'],
+  variable: '--font-sen',
+  display: 'swap',
+  preload: false,
+})
+
+const fontInter = Inter({
+  subsets: ['latin', 'latin-ext'],
+  variable: '--font-inter',
+  display: 'swap',
+  preload: false,
 })
 
 export const metadata = {
@@ -70,7 +87,7 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${fontDisplay.variable} ${fontSans.variable} ${fontMono.variable}`}
+      className={`${fontDisplay.variable} ${fontSans.variable} ${fontMono.variable} ${fontSen.variable} ${fontInter.variable}`}
     >
       <body className="bg-bg text-gray-900 font-sans antialiased">
         {children}

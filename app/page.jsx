@@ -3,7 +3,8 @@ import {
   ArrowRight, BadgeCheck, BarChart3, Building2, Calendar, Check, DollarSign, Handshake,
   Heart, MessageCircle, MessageSquare, Radio, Share2, Sparkles, Users,
 } from 'lucide-react'
-import InlineLogin from '@/components/auth/InlineLogin'
+import { Suspense } from 'react'
+import LoginScreen from '@/components/auth/LoginScreen'
 
 // Brand marks — lucide doesn't ship Twitch/Kick/YouTube.
 function TwitchMark({ className, style }) {
@@ -93,88 +94,15 @@ export default function Page() {
   return (
     <div className="min-h-screen bg-white font-sans text-ink">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-ink focus:text-white focus:rounded-full focus:font-semibold focus:text-caption">Skip to content</a>
-      {/* Nav */}
-      <nav aria-label="Main" className="sticky top-0 z-40 bg-paper/85 backdrop-blur border-b border-rule">
-        <div className="max-w-6xl mx-auto h-16 flex items-center px-6">
-          <Link href="/" aria-label="StreamLink — home" className="flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-md">
-            <img src="/brand/icon.svg" alt="StreamLink" className="h-9 w-auto" />
-          </Link>
-          <div className="hidden md:flex items-center gap-7 ml-10 text-caption text-muted font-semibold">
-            <a href="#features" className="hover:text-ink transition focus-visible:outline-none focus-visible:text-ink">Platform</a>
-            <a href="#brands" className="hover:text-ink transition focus-visible:outline-none focus-visible:text-ink">For brands &amp; agencies</a>
-            <Link href="/pricing" className="hover:text-ink transition focus-visible:outline-none focus-visible:text-ink">Upgrade</Link>
-          </div>
-          <div className="ml-auto flex items-center gap-2">
-            <Link href="/login" className="px-3 py-1.5 text-caption font-semibold text-muted hover:text-ink transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-full">Sign in</Link>
-            <Link href="/register" className="group inline-flex items-center gap-1.5 px-4 py-2 bg-ink hover:bg-black text-white text-caption font-semibold rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
-              Get started
-              <ArrowRight className="w-3.5 h-3.5 -mr-0.5 transition-transform group-hover:translate-x-0.5" strokeWidth={2.25} aria-hidden />
-            </Link>
-          </div>
-        </div>
-      </nav>
-
       <main id="main-content">
-      {/* Hero — Lara split-screen: left brand panel, right login (June 2026 refresh) */}
-      <section aria-label="Hero" className="relative overflow-hidden">
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-10 sm:pt-14 pb-20 sm:pb-24 grid lg:grid-cols-[1.1fr_1fr] gap-8 lg:gap-12 items-stretch">
-          {/* Left: brand panel with soft pastel blobs */}
-          <div className="relative rounded-3xl overflow-hidden bg-[#FAFAFA] border border-rule px-8 sm:px-12 py-12 sm:py-16 flex flex-col">
-            {/* Soft pastel blobs */}
-            <span aria-hidden className="absolute -top-32 -left-28 w-[480px] h-[480px] rounded-full bg-[#EDE8FF] blur-[110px] opacity-90" />
-            <span aria-hidden className="absolute -bottom-20 -right-16 w-[360px] h-[360px] rounded-full bg-[#FFE0EE] blur-[110px] opacity-70" />
-            <span aria-hidden className="absolute top-[40%] left-[28%] w-[280px] h-[280px] rounded-full bg-[#FFE8DC] blur-[110px] opacity-50" />
+      {/* Hero — Oct 2026 login screen (Figma "StreamLink | Landing Login" → Aprovado → Login).
+          Replaces the June 2026 split hero + top nav; sections below are unchanged. */}
+      <Suspense fallback={null}>
+        <LoginScreen />
+      </Suspense>
 
-            <div className="relative">
-              {/* 3D hummingbird — Lara's official submark */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/brand/icon.svg" alt=""
-                className="w-44 sm:w-52 h-auto -ml-3 mb-2 drop-shadow-[0_12px_28px_rgba(228,52,122,0.25)]" />
-
-              {/* Wordmark — Lara's gradient lockup */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/brand/logo-wordmark.svg" alt="StreamLink"
-                className="h-10 sm:h-12 w-auto mb-7" />
-
-              <h1 className="font-display text-h2 sm:text-h2-lg text-ink font-bold leading-tight max-w-md">
-                The Network built for<br />
-                <span className="bg-streamlink bg-clip-text text-transparent">Streamers, Influencers<br />&amp; Brands.</span>
-              </h1>
-
-              <p className="text-body text-muted mt-5 max-w-md leading-relaxed">
-                StreamLink is where creators build their reputation, agencies discover top talent, and brands close deals — all in one professional network made for the live streaming world.
-              </p>
-
-              {/* Connect · Collaborate · Grow pills */}
-              <div className="flex flex-wrap gap-2.5 mt-7">
-                <span className="px-5 py-2 rounded-full text-[13px] font-semibold bg-[#FFF0EB] text-sl-orange border-[1.5px] border-[#FFD8C8]">Connect.</span>
-                <span className="px-5 py-2 rounded-full text-[13px] font-semibold bg-[#FFF0F5] text-sl-pink border-[1.5px] border-[#FFD0E4]">Collaborate.</span>
-                <span className="px-5 py-2 rounded-full text-[13px] font-semibold bg-[#F3EEFF] text-sl-purple border-[1.5px] border-[#DDD0FF]">Grow.</span>
-              </div>
-            </div>
-
-            {/* Stats */}
-            <dl className="relative mt-12 flex gap-10">
-              {[
-                { label: 'Creators', value: '120K+' },
-                { label: 'Brand Deals', value: '8,400' },
-                { label: 'Agencies', value: '3,200' },
-              ].map((s) => (
-                <div key={s.label}>
-                  <dd className="font-display text-[26px] font-extrabold bg-streamlink bg-clip-text text-transparent leading-none">{s.value}</dd>
-                  <dt className="text-[12px] text-muted mt-1 font-medium">{s.label}</dt>
-                </div>
-              ))}
-            </dl>
-          </div>
-
-          {/* Right: inline login */}
-          <div className="relative bg-white border border-rule rounded-3xl px-6 sm:px-10 py-10 sm:py-12 shadow-card flex items-center justify-center overflow-hidden">
-            <InlineLogin />
-          </div>
-        </div>
-
-        {/* Platform strip below the split panel — keeps "works with your platforms" promise */}
+      {/* Platform strip — keeps the "works with your platforms" promise under the hero */}
+      <section aria-label="Supported platforms" className="pt-14">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-14">
           <div className="text-micro font-mono font-semibold uppercase text-muted mb-3">Works with your platforms</div>
           <div className="flex flex-wrap items-center gap-2">

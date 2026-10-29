@@ -8,15 +8,12 @@ import { useAppStore, useAuthStore } from '@/lib/store'
 import ImageUpload from '@/components/ImageUpload'
 import PlatformPicker from '@/components/PlatformPicker'
 import { COUNTRIES, LANGUAGES } from '@/lib/countries'
+// Same niche list as signup; niches saved under the previous list still render (see the map below).
+import { INFLUENCER_NICHES } from '@/lib/signup'
 
 // "facebook-live" → "Facebook Live" for platform-link field labels.
 const platformLabel = (slug) => slug.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
 
-const INFLUENCER_CATEGORIES = [
-  'Fashion & Style', 'Beauty', 'Fitness & Wellness', 'Lifestyle', 'Travel',
-  'Food & Drinks', 'Tech & AI', 'Finance & Business', 'Entertainment', 'Gaming',
-  'Education / Niche Knowledge', 'Dating & Relationships', 'Adult Content',
-]
 
 const TABS = [
   { id: 'profile',  label: 'Profile',  Icon: User },
@@ -225,7 +222,7 @@ function ProfileTab({ profile, showToast, refresh }) {
 
       <Card title="Content niches" hint="Optional — useful for influencers and brand matching.">
         <div className="grid grid-cols-2 gap-1.5">
-          {INFLUENCER_CATEGORIES.map((cat) => {
+          {[...INFLUENCER_NICHES, ...form.contentCategories.filter((c) => !INFLUENCER_NICHES.includes(c))].map((cat) => {
             const active = form.contentCategories.includes(cat)
             return (
               <button key={cat} type="button" onClick={() => toggleNiche(cat)}

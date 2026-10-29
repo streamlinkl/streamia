@@ -14,6 +14,12 @@ module.exports = {
         sans: ['var(--font-sans)', '"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
         display: ['var(--font-display)', '"Hanken Grotesk"', 'system-ui', 'sans-serif'],
         mono: ['var(--font-mono)', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        // Auth redesign (Oct 2026). Trap isn't on Google Fonts — see the
+        // @font-face note in globals.css; until its files ship we fall back
+        // to the display face.
+        trap: ['Trap', 'var(--font-display)', 'system-ui', 'sans-serif'],
+        sen: ['var(--font-sen)', 'var(--font-sans)', 'system-ui', 'sans-serif'],
+        inter: ['var(--font-inter)', 'system-ui', 'sans-serif'],
       },
       fontSize: {
         // Editorial type scale — page.jsx will migrate ad-hoc text-[NNpx] to these.
@@ -52,6 +58,12 @@ module.exports = {
         kick: '#2ea04a',
         youtube: '#cc0000',
         bg: '#f3f2ef',
+        // Auth redesign (Oct 2026) — one colour per account type + the
+        // near-black primary button of the signup forms.
+        'role-streamer': '#F58635',
+        'role-influencer': '#9F07D0',
+        'role-brand': '#003EBA',
+        cta: '#1A1A1A',
       },
       backgroundImage: {
         // Warm sunset iridescent — default avatar fallback + "graduate" brand moments.
@@ -67,6 +79,10 @@ module.exports = {
         // Lara's official Streamlink gradient (orange → pink → purple).
         'streamlink':
           'linear-gradient(110deg, #F4622A 0%, #E8347A 48%, #7C3AED 100%)',
+        // Auth redesign (Oct 2026): hero headline gradient + Sign in button.
+        'sl-headline':
+          'linear-gradient(90deg, #F58635 0%, #FB523C 14%, #FE045D 29%, #EB4E8D 46%, #BE70EC 63%, #9F07D0 83%, #003EBA 100%)',
+        'sl-signin': 'linear-gradient(90deg, #F58635 0%, #EB4E8D 100%)',
       },
       boxShadow: {
         // Single soft shadow token — replaces ad-hoc shadow-[0_4px_...] across page.jsx.

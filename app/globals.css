@@ -5,6 +5,16 @@
 /* Fonts are loaded via next/font/google in app/layout.jsx (zero-CLS, self-hosted).
    Body font-family resolves through Tailwind's `font-sans` (→ var(--font-sans)). */
 
+/* Trap — display face of the Oct 2026 login/signup design. It isn't on Google
+   Fonts and its licensed files aren't in the repo yet, so these rules only pick
+   up a locally installed copy (no network request, no 404). Tailwind's
+   `font-trap` falls back to the display font otherwise. When the .woff2 files
+   land in /public/fonts/trap/, add url() sources here. */
+@font-face { font-family: 'Trap'; font-weight: 600; font-display: swap; src: local('Trap SemiBold'), local('Trap-SemiBold'); }
+@font-face { font-family: 'Trap'; font-weight: 700; font-display: swap; src: local('Trap Bold'), local('Trap-Bold'); }
+@font-face { font-family: 'Trap'; font-weight: 800; font-display: swap; src: local('Trap ExtraBold'), local('Trap-ExtraBold'); }
+@font-face { font-family: 'Trap'; font-weight: 900; font-display: swap; src: local('Trap Black'), local('Trap-Black'); }
+
 /* Subtle paper grain — only on routes that opt in via .has-grain on body. */
 .has-grain {
   background-image:
