@@ -90,11 +90,13 @@ function FilterSection({ icon: Icon, label, open, onToggle, options, value, onCh
       </button>
       {open && (
         <div className="px-2.5 pb-2.5 flex flex-col gap-px max-h-[260px] overflow-y-auto">
-          <FilterOption checked={!value} onClick={() => onChange(null)} label="All" />
+          {/* Multi-select (QA #7): "All" clears the group; options toggle. */}
+          <FilterOption checked={value.length === 0} onClick={() => onChange([])} label="All" />
           {options.map((opt) => {
             const v = typeof opt === 'string' ? opt : opt.value
             const l = typeof opt === 'string' ? opt : opt.label
-            return <FilterOption key={v} checked={value === v} onClick={() => onChange(v)} label={l} />
+            const on = value.includes(v)
+            return <FilterOption key={v} checked={on} onClick={() => onChange(on ? value.filter((x) => x !== v) : [...value, v])} label={l} />
           })}
         </div>
       )}
@@ -122,7 +124,8 @@ export default function JobsPage() {
   const { user } = useAuthStore()
   const isCompany = user?.role === 'company' || user?.role === 'admin'
 
-  const [filters, setFilters] = useState({ category: null, platform: null, dealType: null, experienceLevel: null })
+  // Each group holds several values: OR within a group, AND across groups.
+  const [filters, setFilters] = useState({ category: [], platform: [], dealType: [], experienceLevel: [] })
   const [openSec, setOpenSec] = useState({ category: true, platform: true, deal: true, exp: false })
   const [query, setQuery] = useState('')
   const [sortVal, setSortVal] = useState('recent')
@@ -139,10 +142,10 @@ export default function JobsPage() {
 
   const filtered = useMemo(() => {
     const list = (dbJobs || []).filter((j) => {
-      if (filters.category && j.category !== filters.category) return false
-      if (filters.platform && j.platform !== filters.platform) return false
-      if (filters.dealType && j.dealType !== filters.dealType) return false
-      if (filters.experienceLevel && j.experienceLevel !== filters.experienceLevel) return false
+      if (filters.category.length && !filters.category.includes(j.category)) return false
+      if (filters.platform.length && !filters.platform.includes(j.platform)) return false
+      if (filters.dealType.length && !filters.dealType.includes(j.dealType)) return false
+      if (filters.experienceLevel.length && !filters.experienceLevel.includes(j.experienceLevel)) return false
       if (query) {
         const q = query.toLowerCase()
         if (!(`${j.title} ${j.company?.name || ''}`.toLowerCase().includes(q))) return false
@@ -155,13 +158,13 @@ export default function JobsPage() {
   }, [dbJobs, filters, query, sortVal])
 
   const activeTags = []
-  if (filters.category)         activeTags.push({ key: 'category',         label: filters.category })
-  if (filters.platform)         activeTags.push({ key: 'platform',         label: filters.platform })
-  if (filters.dealType)         activeTags.push({ key: 'dealType',         label: dealLabel(filters.dealType) })
-  if (filters.experienceLevel)  activeTags.push({ key: 'experienceLevel',  label: expLabel(filters.experienceLevel) })
+  filters.category.forEach((v) => activeTags.push({ key: 'category', value: v, label: v }))
+  filters.platform.forEach((v) => activeTags.push({ key: 'platform', value: v, label: v }))
+  filters.dealType.forEach((v) => activeTags.push({ key: 'dealType', value: v, label: dealLabel(v) }))
+  filters.experienceLevel.forEach((v) => activeTags.push({ key: 'experienceLevel', value: v, label: expLabel(v) }))
 
   const clearAll = () => {
-    setFilters({ category: null, platform: null, dealType: null, experienceLevel: null })
+    setFilters({ category: [], platform: [], dealType: [], experienceLevel: [] })
     setQuery('')
     setSortVal('recent')
   }
@@ -256,7 +259,7 @@ export default function JobsPage() {
           {activeTags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-3">
               {activeTags.map((t) => (
-                <button key={t.key} onClick={() => setFilters((f) => ({ ...f, [t.key]: null }))}
+                <button key={`${t.key}:${t.value}`} onClick={() => setFilters((f) => ({ ...f, [t.key]: f[t.key].filter((x) => x !== t.value) }))}
                   className="inline-flex items-center gap-1.5 px-3 py-1 bg-accent-lt hover:bg-purple-100 text-accent-dk rounded-full text-[12px] font-medium transition">
                   {t.label}
                   <X className="w-3 h-3" strokeWidth={2.5} />

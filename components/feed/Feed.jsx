@@ -1,16 +1,17 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
 import useSWR from 'swr'
 import {
-  Check, Heart, Image as ImageIcon, Loader2, MessageCircle, Send, Share2, Trash2, X,
+  Image as ImageIcon, Loader2, X,
 } from 'lucide-react'
 import { postApi, profileApi, uploadFile } from '@/lib/api-client'
 import { useAuthStore, useAppStore } from '@/lib/store'
 import { getSocket } from '@/lib/socket'
 import PremiumBadge from '@/components/PremiumBadge'
-import { formatDistanceToNow } from 'date-fns'
 import { SkeletonPost, SkeletonProfile } from '@/components/Skeleton'
+import PostCard from '@/components/feed/PostCard'
+import ImageLightbox from '@/components/ImageLightbox'
 
 // Top-level client wrapper. Receives initial posts from the server page so
 // the first paint already has content; SWR takes over for subsequent updates.
@@ -33,11 +34,10 @@ export default function Feed({ initialPosts = [] }) {
 
         {/* Feed */}
         <main className="space-y-3">
-          {/* Mobile-only: mirror the app — profile card, trending tags and
-              live-now stack above the composer (they sit in the sidebars on desktop). */}
-          <div className="md:hidden space-y-3">
-            <ProfileSidebar profile={profile} />
-            <TrendingTags />
+          {/* Mobile-only (QA #8): Live Now, then the composer, then posts. The
+              profile card + trending tags stay in the desktop sidebar; the
+              profile is one tap away on the avatar. */}
+          <div className="md:hidden">
             <LiveNowStrip />
           </div>
           <Composer />
@@ -68,6 +68,7 @@ function Composer() {
   const [mediaUrl, setMediaUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [preview, setPreview] = useState(false)
   const inputRef = useRef(null)
 
   const pickImage = () => inputRef.current?.click()
@@ -127,12 +128,15 @@ function Composer() {
           {mediaUrl && (
             <div className="mt-2 relative inline-block">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={mediaUrl} alt="Attached" className="max-h-48 rounded-xl border border-gray-200" />
+              <button type="button" onClick={() => setPreview(true)} aria-label="Preview image" className="block cursor-zoom-in">
+                <img src={mediaUrl} alt="Attached" className="max-h-48 rounded-xl border border-gray-200" />
+              </button>
               <button type="button" onClick={() => setMediaUrl('')}
                 className="absolute top-1 right-1 w-6 h-6 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center transition"
                 aria-label="Remove image">
                 <X className="w-3.5 h-3.5" strokeWidth={2.5} />
               </button>
+              {preview && <ImageLightbox src={mediaUrl} alt="Attached image" onClose={() => setPreview(false)} />}
             </div>
           )}
         </div>
@@ -155,244 +159,6 @@ function Composer() {
   )
 }
 
-// ── Post Card ──
-function PostCard({ post }) {
-  const { profile: me } = useAuthStore()
-  const { showToast } = useAppStore()
-  const [liked, setLiked] = useState(Boolean(post.viewerHasLiked))
-  const [count, setCount] = useState(post.likesCount || 0)
-  const [commentCount, setCommentCount] = useState(post.commentsCount || 0)
-  const [showLikers, setShowLikers] = useState(false)
-  const [showComments, setShowComments] = useState(false)
-  const [shared, setShared] = useState(false)
-  const initials = post.author?.displayName?.slice(0, 2).toUpperCase() || '??'
-  const timeAgo = post.createdAt ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }) : ''
-
-  const handleLike = async () => {
-    const next = !liked
-    setLiked(next); setCount((c) => c + (next ? 1 : -1))
-    try {
-      const res = next ? await postApi.like(post.id) : await postApi.unlike(post.id)
-      if (typeof res?.likesCount === 'number') setCount(res.likesCount)
-    } catch {
-      setLiked(!next); setCount((c) => c + (next ? -1 : 1))
-    }
-  }
-
-  const handleShare = async () => {
-    const url = `${window.location.origin}/u/${post.author?.handle || post.author?.id}`
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: `${post.author?.displayName} on StreamLink`, text: post.content, url })
-      } else {
-        await navigator.clipboard.writeText(url)
-        showToast('Link copied to clipboard')
-      }
-      setShared(true); setTimeout(() => setShared(false), 1500)
-    } catch { /* user cancelled */ }
-  }
-
-  return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition">
-      <div className="flex gap-3 p-4 pb-0 items-start">
-        <Link href={`/profile/${post.author?.id}`} className="w-11 h-11 rounded-full bg-graduate-radial flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden hover:opacity-80 transition">
-          {post.author?.avatarUrl
-            // eslint-disable-next-line @next/next/no-img-element
-            ? <img src={post.author.avatarUrl} alt="" className="w-full h-full object-cover" />
-            : initials}
-        </Link>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <Link href={`/profile/${post.author?.id}`} className="text-[13.5px] font-bold hover:underline">{post.author?.displayName || 'Unknown'}</Link>
-            {post.author?.isVerified && <PremiumBadge size={13} />}
-            {post.author?.isLive && <span className="text-[9.5px] bg-live text-white font-black px-1.5 py-0.5 rounded-full">LIVE</span>}
-          </div>
-          <div className="flex items-center gap-2 mt-0.5">
-            {post.author?.category && <span className="text-[11.5px] text-gray-400">{post.author.category}</span>}
-            <span className="text-[11px] text-gray-300">{timeAgo}</span>
-          </div>
-        </div>
-      </div>
-      {post.content && (
-        <div className="px-4 py-3">
-          <p className="text-[13.5px] leading-relaxed text-gray-800 whitespace-pre-wrap">{post.content}</p>
-        </div>
-      )}
-      {post.mediaUrl && (
-        <div className="px-4 pb-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={post.mediaUrl} alt=""
-            className="w-full max-h-[520px] rounded-xl border border-gray-100 object-cover cursor-zoom-in"
-            onClick={() => window.open(post.mediaUrl, '_blank', 'noopener,noreferrer')} />
-        </div>
-      )}
-      <div className="flex border-t border-gray-100">
-        <button onClick={handleLike}
-          className={`flex-1 inline-flex items-center justify-center gap-2 py-2.5 text-[12px] font-semibold transition hover:bg-gray-50 rounded-bl-xl
-            ${liked ? 'text-live' : 'text-gray-500'}`}>
-          <Heart className="w-4 h-4" fill={liked ? 'currentColor' : 'none'} strokeWidth={2.25} />
-          <span onClick={(e) => { e.stopPropagation(); if (count > 0) setShowLikers(true) }} className={count > 0 ? 'hover:underline' : ''}>{count}</span>
-        </button>
-        <button onClick={() => setShowComments((s) => !s)}
-          className={`flex-1 inline-flex items-center justify-center gap-2 py-2.5 text-[12px] font-semibold transition hover:bg-gray-50
-            ${showComments ? 'text-accent' : 'text-gray-500'}`}>
-          <MessageCircle className="w-4 h-4" strokeWidth={2.25} /> {commentCount}
-        </button>
-        <button onClick={handleShare}
-          className={`flex-1 inline-flex items-center justify-center gap-2 py-2.5 text-[12px] font-semibold transition hover:bg-gray-50 rounded-br-xl
-            ${shared ? 'text-emerald-600' : 'text-gray-500'}`}>
-          {shared ? <><Check className="w-4 h-4" strokeWidth={2.5} /> Copied</> : <><Share2 className="w-4 h-4" strokeWidth={2.25} /> Share</>}
-        </button>
-      </div>
-      {showComments && <CommentSection postId={post.id} me={me} onCountChange={setCommentCount} />}
-      {showLikers && <LikesModal postId={post.id} onClose={() => setShowLikers(false)} />}
-    </div>
-  )
-}
-
-function CommentSection({ postId, me, onCountChange }) {
-  const { showToast } = useAppStore()
-  const [items, setItems] = useState(null)
-  const [draft, setDraft] = useState('')
-  const [posting, setPosting] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-    postApi.comments(postId, undefined, 50)
-      .then((res) => { if (!cancelled) setItems((res?.items || []).slice().reverse()) })
-      .catch(() => { if (!cancelled) setItems([]) })
-    return () => { cancelled = true }
-  }, [postId])
-
-  const submit = async () => {
-    const text = draft.trim()
-    if (!text || posting) return
-    setPosting(true)
-    try {
-      const created = await postApi.addComment(postId, text)
-      setItems((prev) => [...(prev ?? []), created])
-      onCountChange?.((c) => c + 1)
-      setDraft('')
-    } catch (err) {
-      showToast(err.message || 'Could not post comment', 'error')
-    } finally {
-      setPosting(false)
-    }
-  }
-
-  const remove = async (id) => {
-    try {
-      await postApi.deleteComment(id)
-      setItems((prev) => prev?.filter((c) => c.id !== id) ?? [])
-      onCountChange?.((c) => Math.max(c - 1, 0))
-    } catch (err) {
-      showToast(err.message || 'Could not delete', 'error')
-    }
-  }
-
-  return (
-    <div className="border-t border-gray-100 bg-gray-50/50 px-4 py-3">
-      {items === null ? (
-        <div className="flex justify-center py-3"><Loader2 className="w-4 h-4 text-gray-400 animate-spin" strokeWidth={2.5} /></div>
-      ) : items.length === 0 ? (
-        <div className="text-center py-2 text-[12px] text-gray-400">Be the first to comment.</div>
-      ) : (
-        <div className="space-y-2.5 mb-3">
-          {items.map((c) => (
-            <div key={c.id} className="flex items-start gap-2.5">
-              <Link href={`/profile/${c.author?.id}`} className="w-7 h-7 rounded-full bg-graduate-radial flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 overflow-hidden">
-                {c.author?.avatarUrl
-                  // eslint-disable-next-line @next/next/no-img-element
-                  ? <img src={c.author.avatarUrl} alt="" className="w-full h-full object-cover" />
-                  : (c.author?.displayName || '??').slice(0, 2).toUpperCase()}
-              </Link>
-              <div className="flex-1 min-w-0">
-                <div className="bg-white border border-gray-100 rounded-2xl px-3 py-2">
-                  <span className="inline-flex items-center gap-1 align-middle">
-                    <Link href={`/profile/${c.author?.id}`} className="text-[12px] font-extrabold hover:underline">{c.author?.displayName}</Link>
-                    {c.author?.isVerified && <PremiumBadge size={11} />}
-                  </span>
-                  <p className="text-[12.5px] text-gray-700 leading-snug whitespace-pre-wrap mt-0.5">{c.content}</p>
-                </div>
-                <div className="flex items-center gap-3 mt-1 px-3">
-                  <span className="text-[10.5px] text-gray-400">{formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}</span>
-                  {me?.id === c.author?.id && (
-                    <button onClick={() => remove(c.id)} className="inline-flex items-center gap-1 text-[10.5px] text-gray-400 hover:text-red-500 transition">
-                      <Trash2 className="w-3 h-3" strokeWidth={2.25} /> Delete
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-      <div className="flex items-end gap-2">
-        <div className="w-7 h-7 rounded-full bg-graduate-radial flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 overflow-hidden">
-          {me?.avatarUrl
-            // eslint-disable-next-line @next/next/no-img-element
-            ? <img src={me.avatarUrl} alt="" className="w-full h-full object-cover" />
-            : (me?.displayName || '??').slice(0, 2).toUpperCase()}
-        </div>
-        <textarea rows={1} value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit() } }}
-          placeholder="Write a comment…"
-          className="flex-1 min-h-[34px] max-h-32 bg-white border border-gray-200 rounded-2xl px-3 py-1.5 text-[12.5px] outline-none focus:border-accent transition resize-none" />
-        <button onClick={submit} disabled={!draft.trim() || posting}
-          className="inline-flex items-center gap-1 h-[34px] px-3 btn-gradient text-white text-[11.5px] font-bold rounded-full transition disabled:opacity-50 flex-shrink-0">
-          {posting ? <Loader2 className="w-3 h-3 animate-spin" strokeWidth={2.5} /> : <Send className="w-3 h-3" strokeWidth={2.5} />}
-          Post
-        </button>
-      </div>
-    </div>
-  )
-}
-
-function LikesModal({ postId, onClose }) {
-  const [likers, setLikers] = useState(null)
-  useEffect(() => {
-    let cancelled = false
-    postApi.likes(postId, 50)
-      .then((list) => { if (!cancelled) setLikers(list || []) })
-      .catch(() => { if (!cancelled) setLikers([]) })
-    return () => { cancelled = true }
-  }, [postId])
-
-  return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm max-h-[70vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <h3 className="text-[15px] font-extrabold">Liked by</h3>
-          <button onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-700">
-            <X className="w-4 h-4" strokeWidth={2.5} />
-          </button>
-        </div>
-        <div className="p-3">
-          {likers === null && <div className="text-center py-6 text-sm text-gray-400">Loading…</div>}
-          {likers && likers.length === 0 && <div className="text-center py-6 text-sm text-gray-400">No likes yet</div>}
-          {likers && likers.map((p) => (
-            <div key={p.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
-              <div className="w-9 h-9 rounded-full bg-graduate-radial flex items-center justify-center text-white font-bold text-xs overflow-hidden">
-                {p.avatarUrl
-                  // eslint-disable-next-line @next/next/no-img-element
-                  ? <img src={p.avatarUrl} alt="" className="w-full h-full object-cover" />
-                  : (p.displayName || '??').slice(0, 2).toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[13px] font-bold flex items-center gap-1 min-w-0">
-                  <span className="truncate">{p.displayName}</span>
-                  {p.isVerified && <PremiumBadge size={12} />}
-                </div>
-                <div className="text-[11px] text-gray-400">@{p.handle}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
 
 // ── Sidebar widgets ──
 function ProfileSidebar({ profile }) {

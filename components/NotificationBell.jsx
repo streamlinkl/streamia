@@ -1,7 +1,7 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Bell, BadgeCheck, Eye, Heart, MessageSquare, Handshake, UserPlus } from 'lucide-react'
+import { Bell, BadgeCheck, Eye, Heart, MessageSquare, Handshake, UserPlus, Repeat2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { notificationApi } from '@/lib/api-client'
 import { getSocket } from '@/lib/socket'
@@ -13,6 +13,7 @@ const TYPE_META = {
   message:             { Icon: MessageSquare, color: 'text-gray-700',  text: 'sent you a message' },
   post_like:           { Icon: Heart,        color: 'text-rose-500',    text: 'liked your post' },
   post_comment:        { Icon: MessageSquare, color: 'text-blue-500',   text: 'commented on your post' },
+  post_repost:         { Icon: Repeat2,      color: 'text-emerald-600', text: 'reposted your post' },
   profile_view:        { Icon: Eye,          color: 'text-indigo-500',  text: 'viewed your profile' },
   admin:               { Icon: BadgeCheck,   color: 'text-amber-500',   text: '' },
 }

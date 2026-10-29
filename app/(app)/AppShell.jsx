@@ -1,14 +1,15 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   BarChart3, Bell, Briefcase, Building2, Crown, Gem, Home, Loader2, LogOut, Menu,
-  MessageSquare, Search, Settings, ShieldCheck, Star, Trophy, User, Users, X,
+  MessageSquare, Search, Settings, ShieldCheck, Star, Trophy, User, Users, X, Headphones,
 } from 'lucide-react'
 import { profileApi } from '@/lib/api-client'
 import { useAuthStore } from '@/lib/store'
 import Toast from '@/components/Toast'
+import SupportDialog from '@/components/SupportDialog'
 import NotificationBell from '@/components/NotificationBell'
 import PremiumBadge from '@/components/PremiumBadge'
 
@@ -76,6 +77,8 @@ export default function AppShell({ me, children }) {
 
   const profile = me?.profile
   const initials = (profile?.displayName || me?.email || '??').slice(0, 2).toUpperCase()
+  const [showSupport, setShowSupport] = useState(false)
+  const closeSupport = useCallback(() => setShowSupport(false), [])
   const isAdmin = me?.role === 'admin'
 
   const signOut = async () => {
@@ -195,6 +198,7 @@ export default function AppShell({ me, children }) {
                 <MenuItem Icon={Building2} onClick={() => { router.push('/companies'); setShowMenu(false) }}>Brands</MenuItem>
                 <MenuItem Icon={Crown} onClick={() => { router.push('/pricing'); setShowMenu(false) }}>Upgrade</MenuItem>
                 <MenuItem Icon={Settings} onClick={() => { router.push('/settings'); setShowMenu(false) }}>Settings</MenuItem>
+                <MenuItem Icon={Headphones} onClick={() => { setShowSupport(true); setShowMenu(false) }}>Customer Support</MenuItem>
                 {isAdmin && <MenuItem Icon={ShieldCheck} onClick={() => { router.push('/admin'); setShowMenu(false) }}>Admin</MenuItem>}
                 <div className="border-t border-gray-100">
                   <MenuItem Icon={LogOut} danger onClick={signOut}>Sign out</MenuItem>
@@ -329,6 +333,9 @@ export default function AppShell({ me, children }) {
               <Link href="/settings" onClick={() => setShowDrawer(false)} className="flex items-center gap-3 px-4 py-2.5 text-[13.5px] font-bold text-gray-700 hover:bg-gray-50 transition">
                 <Settings className="w-5 h-5" strokeWidth={2.25} /> Settings
               </Link>
+              <button type="button" onClick={() => { setShowDrawer(false); setShowSupport(true) }} className="w-full flex items-center gap-3 px-4 py-2.5 text-[13.5px] font-bold text-gray-700 hover:bg-gray-50 transition">
+                <Headphones className="w-5 h-5" strokeWidth={2.25} /> Customer Support
+              </button>
               {isAdmin && (
                 <Link href="/admin" onClick={() => setShowDrawer(false)} className="flex items-center gap-3 px-4 py-2.5 text-[13.5px] font-bold text-gray-700 hover:bg-gray-50 transition">
                   <ShieldCheck className="w-5 h-5" strokeWidth={2.25} /> Admin
@@ -347,6 +354,7 @@ export default function AppShell({ me, children }) {
 
       <main>{children}</main>
       <Toast />
+      {showSupport && <SupportDialog onClose={closeSupport} />}
     </>
   )
 }

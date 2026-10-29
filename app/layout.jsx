@@ -1,5 +1,4 @@
 import './globals.css'
-import SupportFab from '@/components/SupportFab'
 import { Epilogue, Hanken_Grotesk, Inter, JetBrains_Mono, Sen } from 'next/font/google'
 
 // Display: Epilogue — modern variable grotesk with true italics for hero
@@ -91,7 +90,6 @@ export default function RootLayout({ children }) {
     >
       <body className="bg-bg text-gray-900 font-sans antialiased">
         {children}
-        <SupportFab />
       </body>
     </html>
   )

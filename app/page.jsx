@@ -234,6 +234,7 @@ export default function Page() {
             <a href="#features" className="hover:text-ink transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm">Platform</a>
             <Link href="/pricing" className="hover:text-ink transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm">Upgrade</Link>
             <Link href="/register/company" className="hover:text-ink transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm">For brands</Link>
+            <a href="mailto:support@streamia.co" className="hover:text-ink transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm">Support</a>
           </nav>
           <div className="md:ml-auto text-micro font-mono text-muted">
             © {new Date().getFullYear()} · Built for streamers, by streamers

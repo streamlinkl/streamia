@@ -37,24 +37,45 @@
   border-radius: inherit;
 }
 
-/* Consistent primary CTA — StreamLink gradient + pink glow + subtle hover lift.
-   Matches Lara's 26.07 reference button. Size/radius stays per-button so small
-   differences are fine; the gradient + glow + hover feel is identical. */
+/* Primary CTA — "Liquid Glass" (QA report 12 Oct 2026, #9.2; replaces the
+   26.07 full-strength gradient). Translucent frosted fill with a light brand
+   tint, a light edge highlight, soft depth. Every `btn-gradient` CTA picks
+   this up; their `text-white` / `hover:bg-*` utilities are neutralised
+   here so the label stays readable on the light glass. The Oct 2026 login /
+   signup screens use their own Figma-approved buttons, not this class. */
 .btn-gradient {
-  background-image: linear-gradient(110deg, #F4622A 0%, #E8347A 48%, #7C3AED 100%);
-  color: #fff;
-  box-shadow: 0 6px 24px rgba(232, 52, 122, 0.28);
-  transition: opacity .2s ease, transform .2s ease, box-shadow .2s ease;
+  position: relative;
+  isolation: isolate;
+  color: #B4155A !important;
+  background-color: rgba(255, 255, 255, 0.55) !important;
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0) 55%),
+    linear-gradient(110deg, rgba(244, 98, 42, 0.16) 0%, rgba(232, 52, 122, 0.18) 48%, rgba(124, 58, 237, 0.16) 100%);
+  border: 1px solid rgba(232, 52, 122, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(232, 52, 122, 0.10),
+    0 1px 2px rgba(10, 10, 10, 0.05),
+    0 8px 22px -10px rgba(232, 52, 122, 0.45);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  backdrop-filter: blur(18px) saturate(180%);
+  transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease, border-color .2s ease;
 }
 .btn-gradient:hover:not(:disabled) {
-  opacity: .95;
+  background-color: rgba(255, 255, 255, 0.72) !important;
+  border-color: rgba(232, 52, 122, 0.36);
   transform: translateY(-1px);
-  box-shadow: 0 10px 32px rgba(232, 52, 122, 0.36);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 0 rgba(232, 52, 122, 0.14),
+    0 2px 4px rgba(10, 10, 10, 0.06),
+    0 12px 28px -10px rgba(232, 52, 122, 0.55);
 }
-.btn-gradient:disabled {
-  opacity: .6;
-  box-shadow: none;
-}
+.btn-gradient:active:not(:disabled) { transform: translateY(0); }
+.btn-gradient:disabled { opacity: .55; box-shadow: none; }
+/* Children that hard-code white (icons, spinners) follow the label colour. */
+.btn-gradient .text-white { color: inherit !important; }
+.btn-gradient .border-white { border-color: currentColor !important; border-top-color: transparent !important; }
 
 /* Subtle 3D tilt + glow under the brand mark (Block E). */
 .logo-3d {

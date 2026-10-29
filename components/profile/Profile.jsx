@@ -4,13 +4,13 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import {
-  BarChart3, Bookmark, Camera, Check, Clock, Eye, FileText, Handshake, Heart,
-  Loader2, MapPin, MessageCircle, Pencil, Plus, Radio, Rocket, Users, X,
+  BarChart3, Bookmark, Camera, Check, Clock, Eye, FileText, Handshake,
+  Loader2, MapPin, Pencil, Plus, Radio, Rocket, Users, X,
 } from 'lucide-react'
 import { connectionApi, favoritesApi, followApi, platformApi, postApi, profileApi, uploadFile } from '@/lib/api-client'
 import { useAuthStore, useAppStore } from '@/lib/store'
-import { formatDistanceToNow } from 'date-fns'
 import RoleBadge from '@/components/RoleBadge'
+import PostCard from '@/components/feed/PostCard'
 import PremiumBadge from '@/components/PremiumBadge'
 
 const ImageCropModal = dynamic(() => import('@/components/ImageCropModal'), { ssr: false })
@@ -84,7 +84,14 @@ export default function Profile({ initialProfile, initialPosts = [], viewingOwn 
   const [posts, setPosts] = useState(initialPosts)
   const [tab, setTab] = useState('Posts')
   const [isFollowing, setIsFollowing] = useState(Boolean(initialProfile?.isFollowing))
-  const [isConnected, setIsConnected] = useState(initialProfile?.connectionStatus === 'accepted')
+  // QA #2: pending ≠ connected. status: null | pending | accepted | declined;
+  // direction: outgoing (I asked) | incoming (they asked).
+  const [conn, setConn] = useState({
+    status: initialProfile?.connectionStatus ?? null,
+    direction: initialProfile?.connectionDirection ?? null,
+    id: initialProfile?.connectionId ?? null,
+  })
+  const [connBusy, setConnBusy] = useState(false)
   const [isFavorited, setIsFavorited] = useState(false)
   const [favoriteBusy, setFavoriteBusy] = useState(false)
   const [showConnections, setShowConnections] = useState(false)
@@ -197,14 +204,36 @@ export default function Profile({ initialProfile, initialPosts = [], viewingOwn 
     }
   }
 
+  const connState = conn.status === 'accepted' ? 'connected'
+    : conn.status && conn.direction === 'incoming' && conn.status === 'pending' ? 'incoming'
+    : conn.status ? 'requested'
+    : 'none'
+
   const handleConnect = async () => {
-    if (isConnected) return
+    if (connBusy || connState === 'connected') return
+    setConnBusy(true)
     try {
-      await connectionApi.create(profile.id)
-      setIsConnected(true); showToast('Connection request sent')
+      if (connState === 'none') {
+        const created = await connectionApi.create(profile.id)
+        setConn({ status: 'pending', direction: 'outgoing', id: created?.id ?? null })
+        showToast('Connection request sent')
+      } else if (connState === 'requested') {
+        if (!conn.id || !window.confirm('Cancel your connection request?')) return
+        await connectionApi.delete(conn.id)
+        setConn({ status: null, direction: null, id: null })
+        showToast('Request cancelled')
+      } else if (connState === 'incoming') {
+        await connectionApi.respond(conn.id, 'accepted')
+        setConn((c) => ({ ...c, status: 'accepted' }))
+        setProfile((p) => ({ ...p, connectionsCount: (p.connectionsCount || 0) + 1 }))
+        fetchProfile?.()
+        showToast(`You're now connected with ${profile.displayName}`)
+      }
     } catch (err) {
-      if (err.code === 'CONNECTION_EXISTS') showToast('Already connected or pending', 'error')
-      else showToast(err.message || 'Could not send request', 'error')
+      if (err.code === 'CONNECTION_EXISTS') showToast('A request between you already exists', 'error')
+      else showToast(err.message || 'Could not update the connection', 'error')
+    } finally {
+      setConnBusy(false)
     }
   }
 
@@ -304,11 +333,17 @@ export default function Profile({ initialProfile, initialPosts = [], viewingOwn 
                       ? <><Check className="w-3.5 h-3.5" strokeWidth={3} /> Following</>
                       : <><Plus className="w-3.5 h-3.5" strokeWidth={3} /> Follow</>}
                   </button>
-                  <button onClick={handleConnect} disabled={isConnected}
-                    className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-bold transition ${isConnected ? 'bg-gray-100 text-gray-500' : 'btn-gradient text-white hover:bg-accent-dk'}`}>
-                    {isConnected
-                      ? <><Check className="w-3.5 h-3.5" strokeWidth={3} /> Connected</>
-                      : <><Handshake className="w-3.5 h-3.5" strokeWidth={2.5} /> Connect</>}
+                  <button onClick={handleConnect} disabled={connBusy || connState === 'connected'}
+                    title={connState === 'requested' ? 'Pending — click to cancel the request' : undefined}
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-bold transition disabled:cursor-default ${
+                      connState === 'connected' ? 'bg-gray-100 text-gray-500'
+                      : connState === 'requested' ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'btn-gradient text-white hover:bg-accent-dk'}`}>
+                    {connBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={2.5} />
+                      : connState === 'connected' ? <Check className="w-3.5 h-3.5" strokeWidth={3} />
+                      : connState === 'requested' ? <Clock className="w-3.5 h-3.5" strokeWidth={2.5} />
+                      : <Handshake className="w-3.5 h-3.5" strokeWidth={2.5} />}
+                    {connState === 'connected' ? 'Connected' : connState === 'requested' ? 'Requested' : connState === 'incoming' ? 'Accept' : 'Connect'}
                   </button>
                 </>
               )}
@@ -428,16 +463,8 @@ export default function Profile({ initialProfile, initialPosts = [], viewingOwn 
                   <div className="font-bold text-gray-600">{isOwnProfile ? "You haven't posted yet" : 'No posts yet'}</div>
                 </div>
               ) : posts.map((post) => (
-                <div key={post.id} className="border border-gray-200 rounded-xl p-4 hover:border-gray-300 transition">
-                  <p className="text-[13.5px] text-gray-700 leading-relaxed">{post.content}</p>
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                    <div className="flex gap-4 text-[12px] text-gray-400">
-                      <span className="inline-flex items-center gap-1"><Heart className="w-3.5 h-3.5" strokeWidth={2.5} /> {post.likesCount || 0}</span>
-                      <span className="inline-flex items-center gap-1"><MessageCircle className="w-3.5 h-3.5" strokeWidth={2.5} /> {post.commentsCount || 0}</span>
-                    </div>
-                    <span className="text-[11px] text-gray-400">{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</span>
-                  </div>
-                </div>
+                // QA #3/#6: full post cards (comments, repost, share, ⋯ delete) like the feed
+                <PostCard key={post.id} post={post} onDeleted={(id) => setPosts((list) => list.filter((p) => p.id !== id))} />
               ))}
             </div>
           )}
