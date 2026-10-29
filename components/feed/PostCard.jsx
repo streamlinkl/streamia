@@ -79,6 +79,12 @@ export default function PostCard({ post, onDeleted }) {
   const [reposted, setReposted] = useState(Boolean(target.viewerHasReposted))
   const [repostCount, setRepostCount] = useState(target.repostsCount || 0)
   const [reposting, setReposting] = useState(false)
+  // The same original can show in several cards (itself + reposts); take the
+  // server's state whenever a feed refetch brings new numbers.
+  useEffect(() => {
+    setReposted(Boolean(target.viewerHasReposted))
+    setRepostCount(target.repostsCount || 0)
+  }, [target.viewerHasReposted, target.repostsCount])
   const [showLikers, setShowLikers] = useState(false)
   const [showComments, setShowComments] = useState(false)
   const timeAgo = target.createdAt ? formatDistanceToNow(new Date(target.createdAt), { addSuffix: true }) : ''
